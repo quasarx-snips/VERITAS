@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from veritas.spatial import calculate_spatial_coverage
+from veritas.spatial import CoverageConfig, calculate_spatial_coverage
 from veritas.verification import (
     EvaluationThresholds,
     calculate_error_statistics,
@@ -57,6 +57,15 @@ def test_spatial_coverage_ignores_out_of_bounds():
     points = np.array([[50.0, 50.0], [-5.0, 50.0], [50.0, 500.0], [np.nan, 50.0]])
     coverage = calculate_spatial_coverage(points, (100, 100))
     assert coverage["occupied_cells"] == 1
+
+
+def test_spatial_coverage_uses_configurable_grid_and_ratio():
+    points = np.array([[1.0, 1.0], [98.0, 98.0]])
+    coverage = calculate_spatial_coverage(points, (100, 100), CoverageConfig((2, 2)))
+    assert coverage["grid_shape"] == (2, 2)
+    assert coverage["occupied_cells"] == 2
+    assert coverage["total_cells"] == 4
+    assert coverage["coverage_ratio"] == 0.5
 
 
 def test_evaluate_registration_passes_and_fails():

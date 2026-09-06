@@ -50,7 +50,7 @@ We do not claim strength the evidence does not support:
 
 ```
 veritas/                 VERITAS python package
-  pipeline.py            orchestration skeleton (stages fixed above)
+  pipeline.py            bounded Phase 1 evidence orchestration
   schemas.py             planned schema contracts
   config.py              policy configuration (AFFINE-ONLY)
   preprocessing/         image loading / normalisation / enhancement
@@ -89,12 +89,14 @@ split with `PreprocessedImage` result), `veritas/features` (SIFT +
 RootSIFT + FeatureStore, `FeatureEvidence` in `veritas.schemas`), `veritas/matching`
 (correspondences), `veritas/geometry` (AFFINE-ONLY `verify_affine`), `veritas/verification`
 + `veritas/spatial` (metrics + coverage). Matching stops at descriptor
-correspondences; only the affine certificate is accepted.
+correspondences; only the affine certificate is accepted. `veritas.pipeline`
+connects these Phase 1 primitives through raw spatial coverage and metrics; it
+does not produce a verdict or a confidence score.
 
 Remaining migration order:
 
 - **P1 (6–10):** ORB → AKAZE → feature quorum → spatial entropy → counter-evidence
-- **After P1:** pipeline wiring, verdict engine, downstream gate, audit report,
+- **After P1:** verdict engine, downstream gate, audit report,
   refinement/registration/visualization modules, benchmark scripts.
 
 ## Running tests

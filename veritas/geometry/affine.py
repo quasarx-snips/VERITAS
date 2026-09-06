@@ -1,131 +1,43 @@
-"""VERITAS geometry — AFFINE-ONLY geometric verification (P0.4 migration).
+"""VERITAS geometry — AFFINE-ONLY estimation (P0.4 migration).
 
-Migrated from the reference repository's geometric verification module. The
-proven behavior is preserved:
+Responsibility split:
 
-- Hartley isotropic point normalisation for the least-squares affine solver;
-- deterministic, vectorized RANSAC with an adaptive iteration bound and a
-  refit-on-inliers pass;
-- collinearity guard for minimal samples;
-- reprojection error classification and error statistics.
+- ``affine``      — the 6-DoF affine model: Hartley point normalisation, the
+                    least-squares solver, application to points, reprojection
+                    error classification and the ``verify_affine`` entry point;
+- ``ransac``      — the model-agnostic deterministic RANSAC engine;
+- ``certificate`` — the structured geometric certificate.
 
-VERITAS certification policy (see ``veritas.config``):
-- The affine model is the ONLY accepted certification model.
-- No automatic model selection is performed (the reference's "auto" ranking is
-  intentionally not migrated).
-- Homography is NOT an accepted certification model (the reference's projective
-  solver is reference-only material, not migrated here).
+Certification policy (see ``veritas.config``): the affine model is the ONLY
+accepted certification model. No automatic model selection is performed (the
+reference's "auto" ranking is intentionally not migrated) and there is no
+homography fallback (the reference's projective solver is reference-only
+material). ``verify_affine`` accepts no model argument by design.
 """
 
 from __future__ import annotations
 
-import math
-from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, Optional, Tuple, Union
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
+
+from .certificate import (
+    AffineCertificate,
+    AffineVerificationResult,  # noqa: F401  (re-exported alias)
+    ErrorStatistics,
+    VerificationDiagnostics,
+)
+from .ransac import RansacConfig, ransac
 
 #: Minimal sample size for the affine model (6 DoF require 3 point pairs).
 MIN_AFFINE_SAMPLES: int = 3
 
 
 @dataclass
-class AffineVerificationConfig:
-    """Configuration parameters for affine geometric verification."""
+class AffineVerificationConfig(RansacConfig):
+    """Affine verification configuration (RANSAC knobs, affine semantics)."""
 
-    reprojection_threshold: float = 3.0      # Max pixel distance for inliers
-    confidence: float = 0.99                 # RANSAC desired confidence level
-    max_iterations: int = 2000               # Maximum RANSAC iterations
-    min_inliers: int = 4                     # Minimum required inliers for success
-    refit_inliers: bool = True               # Refit model on all inliers via LSQ
-    random_seed: Optional[int] = 42          # RNG seed for deterministic execution
-
-
-@dataclass
-class ErrorStatistics:
-    """Reprojection error statistics for inlier matches."""
-
-    mean: float = 0.0
-    median: float = 0.0
-    std: float = 0.0
-    rmse: float = 0.0
-    min_error: float = 0.0
-    max_error: float = 0.0
-    percentile_95: float = 0.0
-
-    def to_dict(self) -> Dict[str, float]:
-        return asdict(self)
-
-
-@dataclass
-class VerificationDiagnostics:
-    """Detailed diagnostics resulting from geometric verification."""
-
-    model_name: str
-    total_matches: int
-    inlier_count: int
-    outlier_count: int
-    inlier_ratio: float
-    iterations_run: int
-    converged: bool
-    is_valid: bool
-    error_stats: ErrorStatistics
-    additional_info: Dict[str, Any] = field(default_factory=dict)
-
-    def to_dict(self) -> Dict[str, Any]:
-        d = asdict(self)
-        d["error_stats"] = self.error_stats.to_dict()
-        return d
-
-    def summary(self) -> str:
-        """Human-readable summary."""
-        status = "VALID" if self.is_valid else "INVALID"
-        return (
-            f"[{status}] Model: {self.model_name} | "
-            f"Inliers: {self.inlier_count}/{self.total_matches} "
-            f"({self.inlier_ratio * 100:.1f}%) | "
-            f"RMSE: {self.error_stats.rmse:.3f}px | "
-            f"Iterations: {self.iterations_run}"
-        )
-
-
-@dataclass
-class AffineVerificationResult:
-    """Complete output from affine geometric verification."""
-
-    is_valid: bool
-    transformation: Optional[np.ndarray]      # 3x3 affine matrix (source -> reference)
-    inlier_mask: np.ndarray                   # 1D boolean array (True = inlier)
-    diagnostics: VerificationDiagnostics
-    source_inliers: np.ndarray                # (K, 2) inlier points in source
-    reference_inliers: np.ndarray             # (K, 2) inlier points in reference
-    inlier_indices: Optional[np.ndarray] = None
-
-    def get_transformation_2x3(self) -> Optional[np.ndarray]:
-        """Return transformation as a 2x3 matrix for OpenCV warp functions."""
-        if self.transformation is None:
-            return None
-        if self.transformation.shape == (2, 3):
-            return self.transformation.copy()
-        if self.transformation.shape == (3, 3):
-            return self.transformation[:2, :].copy()
-        raise ValueError(f"Unexpected transformation shape: {self.transformation.shape}")
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Serialize to dictionary (for JSON export)."""
-        return {
-            "is_valid": self.is_valid,
-            "transformation": self.transformation.tolist() if self.transformation is not None else None,
-            "inlier_count": int(self.diagnostics.inlier_count),
-            "inlier_ratio": float(self.diagnostics.inlier_ratio),
-            "rmse": float(self.diagnostics.error_stats.rmse),
-            "model": self.diagnostics.model_name,
-        }
-
-
-# =====================================================================
-# Vectorized affine solvers (direct linear estimation)
-# =====================================================================
 
 def _normalize_points(points: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Hartley isotropic normalization for numerical stability."""
@@ -149,7 +61,11 @@ def _normalize_points(points: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
 
 
 def _fit_affine(src: np.ndarray, dst: np.ndarray) -> Optional[np.ndarray]:
-    """Vectorized 2D Affine Transformation Solver (6 DoF)."""
+    """Vectorized 2D Affine Transformation Solver (6 DoF).
+
+    Solves ``[x' y'] = [A t] [x y 1]`` in Hartley-normalised coordinates and
+    denormalises back to pixel space.
+    """
     num_pts = len(src)
     if num_pts < MIN_AFFINE_SAMPLES:
         return None
@@ -312,151 +228,112 @@ def _ransac_affine(
     reference_points: np.ndarray,
     config: AffineVerificationConfig,
 ) -> Tuple[Optional[np.ndarray], np.ndarray, int, bool]:
-    """Internal deterministic RANSAC engine for the affine model."""
-    num_pts = len(source_points)
-    if num_pts < MIN_AFFINE_SAMPLES:
-        return None, np.zeros(num_pts, dtype=bool), 0, False
+    """Deterministic affine RANSAC: generic engine + affine model pieces."""
+    return ransac(
+        source_points,
+        reference_points,
+        min_samples=MIN_AFFINE_SAMPLES,
+        fit_model=_fit_affine,
+        classify=lambda src, ref, model: classify_matches(src, ref, model, config.reprojection_threshold),
+        is_degenerate=_are_points_collinear,
+        config=config,
+    )
 
-    rng = np.random.RandomState(config.random_seed)
 
-    best_inlier_mask = np.zeros(num_pts, dtype=bool)
-    best_inlier_count = 0
-    best_model = None
-    dynamic_max_iters = config.max_iterations
-    iterations_run = 0
-
-    for it in range(config.max_iterations):
-        iterations_run += 1
-        if iterations_run > dynamic_max_iters:
-            break
-
-        sample_indices = rng.choice(num_pts, size=MIN_AFFINE_SAMPLES, replace=False)
-        src_sample = source_points[sample_indices]
-        dst_sample = reference_points[sample_indices]
-
-        if _are_points_collinear(src_sample):
-            continue
-
-        model_candidate = _fit_affine(src_sample, dst_sample)
-        if model_candidate is None or not np.all(np.isfinite(model_candidate)):
-            continue
-
-        inlier_mask = classify_matches(
-            source_points, reference_points, model_candidate, config.reprojection_threshold
-        )
-        inlier_count = int(np.sum(inlier_mask))
-
-        if inlier_count > best_inlier_count:
-            best_inlier_count = inlier_count
-            best_inlier_mask = inlier_mask
-            best_model = model_candidate
-
-            w = inlier_count / float(num_pts)
-            p = config.confidence
-            w_sample = max(w ** MIN_AFFINE_SAMPLES, 1e-12)
-            if 1.0 - w_sample > 0.0:
-                calc_iters = math.log(1.0 - p) / math.log(1.0 - w_sample)
-                dynamic_max_iters = min(config.max_iterations, int(math.ceil(calc_iters)))
-
-    if config.refit_inliers and best_inlier_count >= MIN_AFFINE_SAMPLES:
-        inlier_src = source_points[best_inlier_mask]
-        inlier_dst = reference_points[best_inlier_mask]
-        refit_model = _fit_affine(inlier_src, inlier_dst)
-        if refit_model is not None and np.all(np.isfinite(refit_model)):
-            best_model = refit_model
-            best_inlier_mask = classify_matches(
-                source_points, reference_points, best_model, config.reprojection_threshold
-            )
-            best_inlier_count = int(np.sum(best_inlier_mask))
-
-    is_converged = best_inlier_count >= config.min_inliers
-    return best_model, best_inlier_mask, iterations_run, is_converged
+def _certificate(
+    transformation: Optional[np.ndarray],
+    inlier_mask: np.ndarray,
+    error_stats: ErrorStatistics,
+    iterations: int,
+    converged: bool,
+    candidate_count: int,
+    config: AffineVerificationConfig,
+) -> AffineCertificate:
+    """Build the structured affine certificate (see ``veritas.geometry.certificate``)."""
+    inlier_count = int(np.sum(inlier_mask)) if len(inlier_mask) else 0
+    inlier_ratio = (inlier_count / candidate_count) if candidate_count else 0.0
+    diagnostics = VerificationDiagnostics(
+        model_name="affine",
+        total_matches=candidate_count,
+        inlier_count=inlier_count,
+        outlier_count=candidate_count - inlier_count,
+        inlier_ratio=inlier_ratio,
+        iterations_run=iterations,
+        converged=bool(converged),
+        is_valid=bool(converged and inlier_count >= config.min_inliers),
+        error_stats=error_stats,
+    )
+    return AffineCertificate(
+        is_valid=diagnostics.is_valid,
+        transformation=transformation,
+        inlier_mask=inlier_mask,
+        diagnostics=diagnostics,
+        source_inliers=np.empty((0, 2), dtype=np.float64),
+        reference_inliers=np.empty((0, 2), dtype=np.float64),
+        configuration=asdict(config),
+    )
 
 
 def verify_affine(
     source_points: np.ndarray,
     reference_points: np.ndarray,
     config: Optional[Any] = None,
-) -> AffineVerificationResult:
-    """Estimate an affine certificate for a set of point correspondences.
+) -> AffineCertificate:
+    """Estimate and certify an affine transform between two point sets.
 
-    The model is always affine: no automatic model selection is performed and
-    no other model is accepted (AFFINE-ONLY certification policy).
+    Affine-only by policy: there is no model argument and no fallback — the
+    certification path always invokes affine estimation explicitly.
     """
     cfg = _config(config)
     src = np.asarray(source_points, dtype=np.float64)
     dst = np.asarray(reference_points, dtype=np.float64)
-    total_pts = len(src)
 
-    if total_pts != len(dst):
-        raise ValueError(f"Mismatch in point sizes: {len(src)} vs {len(dst)}")
+    if len(src) != len(dst):
+        raise ValueError(f"Point counts mismatch: {len(src)} vs {len(dst)}")
 
-    if total_pts < MIN_AFFINE_SAMPLES:
-        diag = VerificationDiagnostics(
-            model_name="affine",
-            total_matches=total_pts,
-            inlier_count=0,
-            outlier_count=total_pts,
-            inlier_ratio=0.0,
-            iterations_run=0,
-            converged=False,
-            is_valid=False,
-            error_stats=ErrorStatistics(),
-            additional_info={"reason": "Insufficient points for affine verification"},
-        )
-        return AffineVerificationResult(
-            is_valid=False,
-            transformation=None,
-            inlier_mask=np.zeros(total_pts, dtype=bool),
-            diagnostics=diag,
-            source_inliers=np.empty((0, 2), dtype=np.float64),
-            reference_inliers=np.empty((0, 2), dtype=np.float64),
-            inlier_indices=None,
+    if len(src) == 0:
+        return _certificate(None, np.zeros(0, dtype=bool), ErrorStatistics(), 0, False, 0, cfg)
+
+    if len(src) < MIN_AFFINE_SAMPLES:
+        return _certificate(
+            None, np.zeros(len(src), dtype=bool), ErrorStatistics(), 0, False, len(src), cfg
         )
 
-    transformation, inlier_mask, iterations_run, converged = _ransac_affine(src, dst, cfg)
-    inlier_count = int(np.sum(inlier_mask))
+    model, mask, iterations, converged = _ransac_affine(src, dst, cfg)
+    if model is None:
+        return _certificate(
+            None, np.zeros(len(src), dtype=bool), ErrorStatistics(), iterations, False, len(src), cfg
+        )
 
-    if transformation is not None and inlier_count > 0:
-        inlier_errors = compute_reprojection_errors(src[inlier_mask], dst[inlier_mask], transformation)
-        error_stats = compute_error_statistics(inlier_errors)
-    else:
-        error_stats = ErrorStatistics()
-
-    is_valid = bool(converged and inlier_count >= cfg.min_inliers and transformation is not None)
-    ratio = float(inlier_count / total_pts) if total_pts > 0 else 0.0
-
-    diagnostics = VerificationDiagnostics(
-        model_name="affine",
-        total_matches=total_pts,
-        inlier_count=inlier_count,
-        outlier_count=total_pts - inlier_count,
-        inlier_ratio=ratio,
-        iterations_run=iterations_run,
-        converged=converged,
-        is_valid=is_valid,
-        error_stats=error_stats,
-        additional_info={"reprojection_threshold": cfg.reprojection_threshold},
-    )
-
-    return AffineVerificationResult(
-        is_valid=is_valid,
-        transformation=transformation if is_valid else None,
-        inlier_mask=inlier_mask,
-        diagnostics=diagnostics,
-        source_inliers=src[inlier_mask] if is_valid else np.empty((0, 2), dtype=np.float64),
-        reference_inliers=dst[inlier_mask] if is_valid else np.empty((0, 2), dtype=np.float64),
-        inlier_indices=np.where(inlier_mask)[0] if is_valid else None,
-    )
+    # Describe verified correspondences only; rejected outliers are reported
+    # separately in the certificate counts.
+    errors = compute_reprojection_errors(src[mask], dst[mask], model)
+    error_stats = compute_error_statistics(errors)
+    certificate = _certificate(model, mask, error_stats, iterations, converged, len(src), cfg)
+    certificate.inlier_indices = np.flatnonzero(mask).astype(np.int64)
+    certificate.source_inliers = src[mask]
+    certificate.reference_inliers = dst[mask]
+    return certificate
 
 
 def verify_affine_from_correspondences(
     match_result: Any,
     config: Optional[Any] = None,
-) -> AffineVerificationResult:
-    """Convenience wrapper that accepts a matcher ``MatchResult`` directly."""
-    from ..matching import MatchResult
+) -> AffineCertificate:
+    """Run affine verification from a matching ``MatchResult``."""
+    source = np.asarray(match_result.source_points, dtype=np.float64).reshape(-1, 2)
+    reference = np.asarray(match_result.reference_points, dtype=np.float64).reshape(-1, 2)
+    return verify_affine(source, reference, config)
 
-    if not isinstance(match_result, MatchResult):
-        raise TypeError("match_result must be a veritas.matching.MatchResult")
-    return verify_affine(match_result.source_points, match_result.reference_points, config=config)
+
+def verify_matches(
+    source_points: np.ndarray,
+    reference_points: np.ndarray,
+    config: Optional[Any] = None,
+) -> AffineCertificate:
+    """Affine-only alias kept for callers of the reference API shape.
+
+    Unlike the reference implementation, this performs NO automatic model
+    selection: the certification model is always affine.
+    """
+    return verify_affine(source_points, reference_points, config)

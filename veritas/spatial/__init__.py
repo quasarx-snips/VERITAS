@@ -5,6 +5,6 @@ points). Spatial entropy and density measures arrive in P1. Vocabulary is
 descriptive, not probabilistic.
 """
 
-from .coverage import calculate_spatial_coverage
+from .coverage import CoverageConfig, calculate_spatial_coverage
 
-__all__ = ["calculate_spatial_coverage"]
+__all__ = ["CoverageConfig", "calculate_spatial_coverage"]

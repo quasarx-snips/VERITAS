@@ -139,3 +139,14 @@ def test_verify_affine_from_correspondences_wraps_match_result():
     assert result.is_valid
     assert result.inlier_mask.sum() == 5
     assert result.get_transformation_2x3().shape == (2, 3)
+
+
+def test_certificate_records_affine_evidence_without_a_confidence_score():
+    source = np.array([[0, 0], [30, 0], [0, 40], [30, 40], [15, 20]], dtype=np.float64)
+    result = verify_affine(source, _project(source, KNOWN_AFFINE))
+    payload = result.to_dict()
+    assert result.model == "affine"
+    assert result.candidate_count == 5
+    assert result.inlier_count == 5
+    assert result.p95_error >= 0.0
+    assert "confidence" not in payload
