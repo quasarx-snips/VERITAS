@@ -103,3 +103,17 @@ Remaining migration order:
 python -m pip install -r requirements.txt
 python -m pytest tests -v
 ```
+
+### Bytecode-cache policy (one single cache tree)
+
+All Python bytecode caches are kept in **one** location: `.pycache/` (git-ignored).
+The root `conftest.py` sets `sys.pycache_prefix`, so pytest runs never scatter
+`__pycache__/` directories across the package tree. For runs outside pytest,
+point the interpreter at the same tree once per shell:
+
+```powershell
+$env:PYTHONPYCACHEPREFIX = "$PWD\.pycache"
+```
+
+(`.pytest_cache/` is pytest's own bookkeeping cache, also git-ignored; it is not
+Python bytecode.)

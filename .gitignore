@@ -4,6 +4,7 @@ data/raw/*
 
 # Python
 __pycache__/
+.pycache/
 *.py[cod]
 .pytest_cache/
 .venv/
