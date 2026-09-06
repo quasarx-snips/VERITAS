@@ -19,4 +19,4 @@ reference repository. Subpackages are imported by their owning modules; this
 ``__init__`` stays import-light until the first migration commits land.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

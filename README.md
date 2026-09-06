@@ -74,10 +74,27 @@ demo/                    runnable demos
 
 ## Current status
 
-Bootstrap commit only. No algorithm modules are implemented yet. Migration order:
+**P0 migration complete** (5 migration commits):
 
-- **P0 (1–5):** preprocessing → SIFT → matching → affine geometry → verification metrics
+| Commit | Scope |
+|---|---|
+| `bf61878` | `migration: add preprocessing primitives` |
+| `4b928f2` | `migration: add SIFT feature extraction` |
+| `c38ad0e` | `migration: add descriptor matching` |
+| `d12f932` | `migration: add affine geometry` |
+| `fa761a0` | `migration: add verification metrics` |
+
+Implemented: `veritas/preprocessing` (Preprocessor), `veritas/features` (SIFT +
+RootSIFT + FeatureStore, `FeatureEvidence` in `veritas.schemas`), `veritas/matching`
+(correspondences), `veritas/geometry` (AFFINE-ONLY `verify_affine`), `veritas/verification`
++ `veritas/spatial` (metrics + coverage). Matching stops at descriptor
+correspondences; only the affine certificate is accepted.
+
+Remaining migration order:
+
 - **P1 (6–10):** ORB → AKAZE → feature quorum → spatial entropy → counter-evidence
+- **After P1:** pipeline wiring, verdict engine, downstream gate, audit report,
+  refinement/registration/visualization modules, benchmark scripts.
 
 ## Running tests
 
