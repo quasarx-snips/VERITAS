@@ -6,5 +6,6 @@ descriptive, not probabilistic.
 """
 
 from .coverage import CoverageConfig, calculate_spatial_coverage
+from .entropy import calculate_spatial_entropy
 
-__all__ = ["CoverageConfig", "calculate_spatial_coverage"]
+__all__ = ["CoverageConfig", "calculate_spatial_coverage", "calculate_spatial_entropy"]
