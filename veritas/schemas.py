@@ -26,7 +26,7 @@ Declared (not yet implemented):
 """
 
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 #: Evidence families are treated as complementary evidence families and
 #: independent implementation paths with different descriptor failure modes —
@@ -57,3 +57,115 @@ class FeatureEvidence:
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
+
+
+@dataclass(frozen=True)
+class DetectorEvidence:
+    """Computed feature-extraction evidence for one detector family."""
+
+    detector: str
+    keypoint_count: int
+    descriptor_count: int
+    descriptor_type: str
+    available: bool = True
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class MatchEvidence:
+    """Actual matching counts and filter diagnostics for one detector."""
+
+    detector: str
+    candidate_count: int
+    filtered_count: int
+    diagnostics: Mapping[str, Any] = field(default_factory=dict)
+    available: bool = True
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {**asdict(self), "diagnostics": dict(self.diagnostics)}
+
+
+@dataclass(frozen=True)
+class GeometryEvidence:
+    """AFFINE-only certificate facts, represented without a confidence score."""
+
+    model: str
+    certified: bool
+    candidate_count: int
+    inlier_count: int
+    inlier_ratio: float
+    residuals: Mapping[str, float]
+    affine_matrix: Optional[List[List[float]]]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {**asdict(self), "residuals": dict(self.residuals)}
+
+
+@dataclass(frozen=True)
+class SpatialEvidence:
+    """Grid occupancy and Shannon-distribution measurements."""
+
+    grid_rows: int
+    grid_columns: int
+    occupied_cells: int
+    coverage_ratio: float
+    normalized_entropy: Optional[float] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class QuorumEvidence:
+    """Detector support states; unavailable evidence is not disagreement."""
+
+    detector_results: Mapping[str, str]
+    available_detectors: List[str]
+    supporting_detectors: List[str]
+    disagreeing_detectors: List[str]
+    quorum_strength: float
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {**asdict(self), "detector_results": dict(self.detector_results)}
+
+
+@dataclass(frozen=True)
+class CounterEvidence:
+    """Inspectable negative evidence, never a verdict."""
+
+    residuals: Mapping[str, Any]
+    feature_disagreement: Mapping[str, Any]
+    spatial_concentration: Mapping[str, Any]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "residuals": dict(self.residuals),
+            "feature_disagreement": dict(self.feature_disagreement),
+            "spatial_concentration": dict(self.spatial_concentration),
+        }
+
+
+@dataclass(frozen=True)
+class VerificationEvidence:
+    """Phase 2 evidence bundle for a later decision layer."""
+
+    features: Mapping[str, DetectorEvidence]
+    matches: Mapping[str, MatchEvidence]
+    geometry: GeometryEvidence
+    spatial: SpatialEvidence
+    quorum: QuorumEvidence
+    counter_evidence: CounterEvidence
+    evidence_score: Optional[float] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "features": {name: value.to_dict() for name, value in self.features.items()},
+            "matches": {name: value.to_dict() for name, value in self.matches.items()},
+            "geometry": self.geometry.to_dict(),
+            "spatial": self.spatial.to_dict(),
+            "quorum": self.quorum.to_dict(),
+            "counter_evidence": self.counter_evidence.to_dict(),
+            "evidence_score": self.evidence_score,
+        }
