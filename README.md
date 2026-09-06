@@ -196,7 +196,7 @@ The command writes the complete report and a zero-pixel explanation payload to
 or API key is required.
 
 ---
-
+(ignore)
 ## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
