@@ -10,7 +10,7 @@ VERITAS is a deterministic verification and safety-gating layer for image pairs.
 python -m scripts.build_prototype_model
 ```
 
-Then open `outputs/prototype_model/VERITAS_demo_report.html`. It presents real curated runs, including affine-tolerant, partial, disagreement, visually disruptive, and blocked cases. It also creates per-case evidence panels, human-readable report pages with image previews, a contact sheet, decision trace, spatial view, and a false-alarm-defense walkthrough.
+Then open `outputs/prototype_model/VERITAS_demo_report.html`. It presents real curated runs from the approved sample pool, including affine-tolerant, distributed, partial, visually disruptive, and blocked cases. It also creates per-case evidence panels, human-readable report pages with image previews, a contact sheet, decision trace, spatial view, and a false-alarm-defense walkthrough.
 
 To run one image pair directly:
 

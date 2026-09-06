@@ -20,10 +20,17 @@ from veritas.pipeline import verify_evidence_pair
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs" / "prototype_model"
+SAMPLES = (
+    "ds_27", "ds_85", "ds_39", "ds_52", "ds_62", "ds_66", "ds_36", "ds_40", "ds_34", "ds_91",
+    "ds_49", "ds_56", "ds_54", "ds_96", "ds_70", "ds_55", "ds_37", "ds_82", "ds_32", "ds_81",
+)
+
+# The landing page is intentionally concise.  These five are a curated subset
+# of SAMPLES, selected to show real strong, partial, weak, and blocked results.
 CASES = (
     ("affine_tolerant_match", 62, "Affine-tolerant correspondence", "A real run with a visually dramatic framing difference, yet broad support across all detector families and a full correspondence result."),
+    ("distributed_support", 52, "Distributed correspondence", "A real run with full spatial support and detector agreement across the supplied image pair."),
     ("partial_overlap", 70, "Partial correspondence", "A real run with visually distinct inputs and limited support; the gate restricts downstream handling."),
-    ("detector_disagreement", 42, "Detector disagreement", "A real run where one detector family disagrees; the verdict remains cautious and requires human review."),
     ("visually_disruptive", 39, "Visually disruptive correspondence", "A real run with weak spatial support despite a visible scene relationship; the gate requires human review."),
     ("blocked_support", 36, "Insufficient correspondence", "A real run with insufficient geometric and spatial support; the gate blocks downstream use."),
 )
@@ -255,6 +262,8 @@ def build(force: bool = False) -> list[dict[str, Any]]:
     (OUT / "cases").mkdir(parents=True, exist_ok=True); (OUT / "reports").mkdir(parents=True, exist_ok=True)
     curated = []
     for case_id, index, title, description in CASES:
+        if f"ds_{index}" not in SAMPLES:
+            raise ValueError(f"Curated case ds_{index} is outside the approved sample pool")
         before, after = image_for("data/raw", index), image_for("data/processed", index)
         report_path = OUT / "reports" / f"{case_id}.json"
         if report_path.exists() and not force:
@@ -271,7 +280,8 @@ def build(force: bool = False) -> list[dict[str, Any]]:
     manifest = {"schema_version": "1.0", "purpose": "Curated prototype-model cases generated from real VERITAS backend runs.", "cases": [{"case_id": c["case_id"], "before_image": c["before"].relative_to(ROOT).as_posix(), "after_image": c["after"].relative_to(ROOT).as_posix(), "description": c["description"], "actual_backend_result": {"verdict": c["report"]["verdict"]["verdict"], "gate": c["report"]["gate"]["action"], "partial_correspondence": c["report"]["partial_correspondence"]["status"]}, "report_path": f"outputs/prototype_model/reports/{c['case_id']}.json", "rendered_report_path": f"outputs/prototype_model/reports/{c['case_id']}.html"} for c in curated], "unavailable_categories": ["Semantic change with trustworthy correspondence: no supplied change ground truth or downstream change outputs."]}
     write_json(OUT / "demo_manifest.json", manifest)
     contact_sheet(curated, OUT / "demo_contact_sheet.png"); architecture_visual(OUT / "evidence_architecture.png")
-    detector_visual(next(c for c in curated if c["case_id"] == "detector_disagreement"), next(c for c in curated if c["case_id"] == "detector_disagreement")["report"], OUT / "detector_comparison.png")
+    detector_case = next(c for c in curated if c["case_id"] == "affine_tolerant_match")
+    detector_visual(detector_case, detector_case["report"], OUT / "detector_comparison.png")
     spatial_case = next(c for c in curated if c["case_id"] == "visually_disruptive"); spatial_visual(spatial_case, spatial_case["report"], OUT / "spatial_evidence.png")
     trace_case = next(c for c in curated if c["case_id"] == "affine_tolerant_match"); trace_visual(trace_case, trace_case["report"], OUT / "decision_trace.png")
     false_alarm_html(spatial_case, OUT / "false_alarm_defense.html"); overview_html(curated, OUT / "VERITAS_demo_report.html")
