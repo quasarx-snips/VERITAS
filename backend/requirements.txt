@@ -1,0 +1,6 @@
+numpy
+opencv-contrib-python>=4.8,<5
+pyyaml
+
+# test/dev
+pytest
