@@ -9,12 +9,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-from .features import SiftDetector
+from .features import AkazeDetector, OrbDetector, SiftDetector, assess_quorum
+from .counter_evidence import summarize_feature_disagreement, summarize_residuals, summarize_spatial_concentration
 from .geometry import AffineCertificate, AffineVerificationConfig, verify_affine_from_correspondences
 from .matching import MatchResult, match_feature_sets
 from .preprocessing import ImagePreprocessor, PreprocessedImage
-from .spatial import CoverageConfig, calculate_spatial_coverage
-from .verification import evaluate_registration
+from .spatial import CoverageConfig, calculate_spatial_coverage, calculate_spatial_entropy
+from .schemas import CounterEvidence, DetectorEvidence, MatchEvidence, SpatialEvidence
+from .verification import evaluate_registration, fuse_evidence, geometry_evidence
 
 
 @dataclass
@@ -83,3 +85,34 @@ def verify_image_pair(
         metrics=metrics,
         spatial_coverage=coverage,
     )
+
+
+def verify_evidence_pair(source_image: Any, reference_image: Any, *, matching_config=None, geometry_config=None,
+                         coverage_config: Optional[CoverageConfig] = None):
+    """Run all Phase 2 evidence channels and return a Phase 3-ready bundle."""
+    preprocessor = ImagePreprocessor()
+    source, reference = preprocessor.process(source_image), preprocessor.process(reference_image)
+    detectors = {"sift": SiftDetector(), "orb": OrbDetector(), "akaze": AkazeDetector()}
+    feature_evidence, match_evidence, geometries, certificates, match_results = {}, {}, {}, {}, {}
+    for name, detector in detectors.items():
+        source_features, source_descriptors = detector.detect(source.enhanced)
+        reference_features, reference_descriptors = detector.detect(reference.enhanced)
+        feature_evidence[name] = DetectorEvidence(name, len(source_features), len(source_descriptors), str(source_descriptors.dtype), bool(len(source_features)))
+        result = match_feature_sets((source_features, source_descriptors), (reference_features, reference_descriptors), matching_config)
+        match_results[name] = result
+        match_evidence[name] = MatchEvidence(name, result.candidate_count, result.accepted_count, result.filter_diagnostics, bool(len(source_features) and len(reference_features)))
+        certificate = verify_affine_from_correspondences(result, geometry_config)
+        certificates[name] = certificate
+        geometries[name] = geometry_evidence(certificate)
+    quorum = assess_quorum(geometries)
+    # SIFT remains the Phase 1 certification channel; other certificates stay visible.
+    primary = certificates["sift"]
+    coverage = calculate_spatial_coverage(primary.source_inliers, source.enhanced.shape, coverage_config)
+    entropy = calculate_spatial_entropy(primary.source_inliers, source.enhanced.shape, coverage_config)
+    spatial = SpatialEvidence(*coverage["grid_shape"], coverage["occupied_cells"], coverage["coverage_ratio"], entropy["normalized_entropy"])
+    residual_values = []
+    if primary.transformation is not None:
+        from .geometry import compute_reprojection_errors
+        residual_values = compute_reprojection_errors(primary.source_inliers, primary.reference_inliers, primary.transformation)
+    counter = CounterEvidence(summarize_residuals(residual_values, primary.threshold), summarize_feature_disagreement(quorum), summarize_spatial_concentration(coverage, entropy))
+    return fuse_evidence(feature_evidence, match_evidence, geometries["sift"], spatial, quorum, counter)
