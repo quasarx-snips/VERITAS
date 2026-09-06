@@ -1,3 +1,7 @@
+# Raw imagery stays local (staging area); commit processed/benchmark fixtures only.
+data/raw/*
+!data/raw/.gitkeep
+
 # Python
 __pycache__/
 *.py[cod]

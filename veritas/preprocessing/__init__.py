@@ -1,6 +1,9 @@
 """Image loading, normalisation, and contrast enhancement primitives.
 
-Target P0.1: migrate the proven ImagePreprocessor implementation (load /
-normalize / CLAHE enhance) from the reference repository, renamed and stripped
-of lunar-specific docstring assumptions.
+P0.1: migrated — the proven reference ``ImagePreprocessor`` implementation,
+adapted as ``Preprocessor`` (grayscale/BGR/BGRA/float -> finite uint8, CLAHE).
 """
+
+from .preprocessor import ImageArray, Preprocessor
+
+__all__ = ["ImageArray", "Preprocessor"]
