@@ -1,5 +1,6 @@
-"""Downstream gating.
+"""Deterministic downstream safety gate."""
 
-Decision gate between the VERITAS verdict and chain users. Future work after
-the verdict engine lands.
-"""
+from .downstream_gate import DownstreamSafetyGate
+from .schema import GateAction, GatePolicy, GateResult
+
+__all__ = ["DownstreamSafetyGate", "GateAction", "GatePolicy", "GateResult"]

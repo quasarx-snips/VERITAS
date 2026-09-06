@@ -6,7 +6,7 @@ not fuse evidence, make a verdict, or invoke downstream gating.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Any, Dict, Optional
 
 from .features import AkazeDetector, OrbDetector, SiftDetector, assess_quorum
@@ -15,8 +15,34 @@ from .geometry import AffineCertificate, AffineVerificationConfig, verify_affine
 from .matching import MatchResult, match_feature_sets
 from .preprocessing import ImagePreprocessor, PreprocessedImage
 from .spatial import CoverageConfig, calculate_spatial_coverage, calculate_spatial_entropy
-from .schemas import CounterEvidence, DetectorEvidence, MatchEvidence, SpatialEvidence
+from .schemas import CounterEvidence, DetectorEvidence, MatchEvidence, SpatialEvidence, VerificationEvidence
 from .verification import evaluate_registration, fuse_evidence, geometry_evidence
+from .verification.partial import analyze_partial_correspondence, PartialCorrespondenceConfig, PartialCorrespondenceResult
+from .verdict.classifier import VerdictClassifier
+from .verdict.schema import VerdictResult
+from .verdict.thresholds import VerdictThresholds
+from .gate import DownstreamSafetyGate, GatePolicy, GateResult
+from .audit import AuditReport, Provenance, build_audit_report
+
+
+@dataclass(frozen=True)
+class VeritasPipelineResult:
+    """Comprehensive result of the VERITAS pipeline, including all phases."""
+
+    evidence: VerificationEvidence
+    partial_correspondence: PartialCorrespondenceResult
+    verdict_result: VerdictResult
+    gate_result: GateResult
+    audit_report: AuditReport
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "evidence": self.evidence.to_dict(),
+            "partial_correspondence": self.partial_correspondence.to_dict(),
+            "verdict_result": self.verdict_result.to_dict(),
+            "gate_result": self.gate_result.to_dict(),
+            "audit_report": self.audit_report.to_dict(),
+        }
 
 
 @dataclass
@@ -87,9 +113,19 @@ def verify_image_pair(
     )
 
 
-def verify_evidence_pair(source_image: Any, reference_image: Any, *, matching_config=None, geometry_config=None,
-                         coverage_config: Optional[CoverageConfig] = None):
-    """Run all Phase 2 evidence channels and return a Phase 3-ready bundle."""
+def verify_evidence_pair(
+    source_image: Any,
+    reference_image: Any,
+    *,
+    matching_config=None,
+    geometry_config=None,
+    coverage_config: Optional[CoverageConfig] = None,
+    partial_config: Optional[PartialCorrespondenceConfig] = None,
+    thresholds_config_path: str = "configs/thresholds.yaml",
+    gate_policy: Optional[GatePolicy] = None,
+    run_id: Optional[str] = None,
+) -> VeritasPipelineResult:
+    """Run evidence, verdict, deterministic gate, and portable audit creation."""
     preprocessor = ImagePreprocessor()
     source, reference = preprocessor.process(source_image), preprocessor.process(reference_image)
     detectors = {"sift": SiftDetector(), "orb": OrbDetector(), "akaze": AkazeDetector()}
@@ -115,4 +151,55 @@ def verify_evidence_pair(source_image: Any, reference_image: Any, *, matching_co
         from .geometry import compute_reprojection_errors
         residual_values = compute_reprojection_errors(primary.source_inliers, primary.reference_inliers, primary.transformation)
     counter = CounterEvidence(summarize_residuals(residual_values, primary.threshold), summarize_feature_disagreement(quorum), summarize_spatial_concentration(coverage, entropy))
-    return fuse_evidence(feature_evidence, match_evidence, geometries["sift"], spatial, quorum, counter)
+
+    # Phase 2 evidence bundle
+    verification_evidence = fuse_evidence(feature_evidence, match_evidence, geometries["sift"], spatial, quorum, counter)
+
+    # Phase 3: Partial Correspondence Analysis
+    partial_correspondence_result = analyze_partial_correspondence(
+        match_result=match_results["sift"],  # Use SIFT matches for primary analysis
+        certificate=primary,
+        image_shape=source.enhanced.shape,
+        verification_evidence=verification_evidence,
+        config=partial_config,
+    )
+
+    # Phase 3: Verdict Classification
+    thresholds = VerdictThresholds.load_from_yaml(thresholds_config_path)
+    classifier = VerdictClassifier(thresholds)
+    verdict_result = classifier.classify(verification_evidence, partial_correspondence_result.status.value)
+    gate_result = DownstreamSafetyGate(gate_policy).decide(verdict_result, verification_evidence)
+    configurations = {
+        "preprocessing": asdict(preprocessor.enhancer.config),
+        "matching": matching_config or {},
+        "geometry": asdict(geometry_config) if geometry_config is not None else {},
+        "ransac": certificates["sift"].configuration,
+        "spatial_grid": asdict(coverage_config) if coverage_config is not None else {"grid_shape": coverage["grid_shape"]},
+        "partial_correspondence": asdict(partial_config) if partial_config is not None else asdict(PartialCorrespondenceConfig()),
+        "verdict_thresholds": thresholds.to_dict(),
+        "gate_policy": gate_result.policy,
+    }
+    provenance = Provenance.create(
+        source_input=source_image,
+        reference_input=reference_image,
+        source_shape=source.enhanced.shape,
+        reference_shape=reference.enhanced.shape,
+        configurations=configurations,
+        run_id=run_id,
+    )
+    audit_report = build_audit_report(
+        verification_evidence,
+        partial_correspondence_result,
+        verdict_result,
+        gate_result,
+        provenance,
+        preprocessing=asdict(preprocessor.enhancer.config),
+    )
+
+    return VeritasPipelineResult(
+        evidence=verification_evidence,
+        partial_correspondence=partial_correspondence_result,
+        verdict_result=verdict_result,
+        gate_result=gate_result,
+        audit_report=audit_report,
+    )

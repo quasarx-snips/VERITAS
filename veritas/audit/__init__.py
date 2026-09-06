@@ -1,5 +1,7 @@
-"""Audit report generation from the complete evidence chain.
+"""Portable audit backend for VERITAS decisions."""
 
-Future work: render the preprocessing/features/matching/geometry/spatial/
-counter-evidence/verdict chain into a reproducible audit report.
-"""
+from .provenance import Provenance
+from .report import build_audit_report
+from .schema import AuditReport
+
+__all__ = ["AuditReport", "Provenance", "build_audit_report"]
