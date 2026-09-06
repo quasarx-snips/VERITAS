@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+*.egg-info/
+
+# Source reference repository — kept cloned and untouched beside VERITAS.
+# It must never become part of the VERITAS repository.
+sihcoremodule26166/
+
+# Stray workspace document (not part of the VERITAS repository layout)
+VERITAS.docx
+
+# Run artifacts (keep the directory via .gitkeep)
+outputs/*
+!outputs/.gitkeep
+
+# Local configuration
+configs/*.local.*

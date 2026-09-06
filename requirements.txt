@@ -1,0 +1,6 @@
+# VERITAS runtime dependencies
+numpy
+opencv-python
+
+# test/dev
+pytest
