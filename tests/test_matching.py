@@ -9,7 +9,9 @@ from veritas.matching import (
     match_descriptors,
     match_feature_sets,
     matches_to_correspondences,
+    mutual_consistency_filter,
     ratio_test,
+    unique_train_matches,
     visualize_matches,
 )
 
@@ -110,3 +112,62 @@ def test_real_image_sift_matching_and_visualization():
     assert result.number_raw_matches > 0
     assert result.number_filtered_matches > 0
     assert visualization.shape == (240, 480, 3)
+
+
+def test_clearly_different_descriptors_do_not_survive_strict_filters():
+    rng = np.random.default_rng(0)
+    source = rng.normal(size=(10, 128)).astype(np.float32)
+    reference = rng.normal(size=(10, 128)).astype(np.float32)
+    result = match_feature_sets(
+        SimpleNamespace(keypoints=[(float(i), 0.0) for i in range(10)], descriptors=source),
+        SimpleNamespace(keypoints=[(float(i), 1.0) for i in range(10)], descriptors=reference),
+        {"ratio": 0.5, "mutual_consistency": True, "unique_train_matches": True},
+    )
+    assert result.candidate_count == 10
+    assert result.accepted_count == 0
+    assert result.filter_diagnostics["removed_by_ratio"] > 0
+
+
+def test_ratio_test_rejects_ambiguous_and_accepts_distinctive():
+    knn = [
+        [cv2.DMatch(0, 0, 0, 10.0), cv2.DMatch(0, 1, 0, 10.5)],   # ambiguous
+        [cv2.DMatch(1, 2, 0, 5.0), cv2.DMatch(1, 3, 0, 20.0)],    # distinctive
+    ]
+    assert ratio_test(knn, ratio=0.8) == [knn[1][0]]
+
+
+def test_mutual_consistency_drops_non_reciprocal_neighbours():
+    rng = np.random.default_rng(21)
+    base = rng.normal(size=(3, 64)).astype(np.float32)
+    source = np.vstack([base, rng.normal(size=(1, 64))]).astype(np.float32)
+    reference = base.copy()
+    forward = match_descriptors(source, reference, config={"knn_k": 1})
+    kept = mutual_consistency_filter(source, reference, forward)
+    assert len(kept) == 3
+    assert all(m.queryIdx < 3 for m in kept)
+
+
+def test_unique_train_matches_is_one_to_one_lowest_distance():
+    matches = [cv2.DMatch(0, 0, 0, 0.5), cv2.DMatch(1, 0, 0, 0.1), cv2.DMatch(2, 1, 0, 0.9)]
+    kept = unique_train_matches(matches)
+    assert sorted((m.queryIdx, m.trainIdx) for m in kept) == [(1, 0), (2, 1)]
+
+
+def test_match_result_reports_family_indices_and_diagnostics():
+    descriptors = np.eye(4, dtype=np.float32)
+    features = [
+        SimpleNamespace(evidence_family="sift", x=float(i), y=0.0, descriptor_index=i)
+        for i in range(4)
+    ]
+    result = match_feature_sets((features, descriptors), (features, descriptors.copy()), {"ratio": 0.8})
+    assert result.candidate_count == 4
+    assert result.accepted_count == 4
+    assert result.descriptor_family == "sift"
+    assert result.source_indices.tolist() == [0, 1, 2, 3]
+    assert result.reference_indices.tolist() == [0, 1, 2, 3]
+    assert np.allclose(result.distances, 0.0)
+    diagnostics = result.filter_diagnostics
+    assert diagnostics["candidate_count"] == 4
+    assert diagnostics["after_unique_train"] == 4
+    assert diagnostics["removed_by_mutual"] == 0
+    assert diagnostics["configured"]["ratio"] == 0.8

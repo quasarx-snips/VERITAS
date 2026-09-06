@@ -130,8 +130,8 @@ def test_verify_affine_from_correspondences_wraps_match_result():
     match_result = MatchResult(
         source_points=source.astype(np.float32),
         reference_points=reference.astype(np.float32),
-        number_raw_matches=len(source),
-        number_filtered_matches=len(source),
+        candidate_count=len(source),
+        accepted_count=len(source),
     )
     result = verify_affine_from_correspondences(
         match_result, AffineVerificationConfig(reprojection_threshold=1.0, random_seed=11)

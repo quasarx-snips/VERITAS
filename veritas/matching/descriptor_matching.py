@@ -1,29 +1,36 @@
-"""VERITAS matching — descriptor correspondences (P0.3 migration).
+﻿"""VERITAS matching â€” descriptor correspondences (P0.3 migration).
 
-Migrated from the reference repository's descriptor matching module. The
-matcher deliberately stops at descriptor correspondences: estimating an affine
-certificate belongs to ``veritas.geometry``.
+Migrated from the reference repository's descriptor matching module. This is
+the raw-matching and orchestration half; the decision filters live in
+``filtering``. The pipeline is:
 
-Preserved behavior:
-- BF and FLANN KNN matching (with LSH for binary/uint8 descriptors);
-- Lowe's nearest-neighbour distance ratio test;
-- mutual-consistency (reciprocal nearest-neighbour) filtering;
-- typed matching per evidence family;
-- one-to-one (unique source and reference) selection;
-- index-preserving correspondence extraction;
-- side-by-side match visualization.
+    DescriptorMatcher (BF / FLANN)
+        â†“ raw candidate matches
+    ratio filter â†’ mutual consistency filter â†’ unique train match filter
+        â†“
+    accepted correspondence set (``MatchResult``)
 
-Domain-specific defaults from the reference implementation (e.g. a "crater"
-singleton feature class) are removed.
+Distance rule (respected, never silently broken):
+- floating-point descriptors (e.g. SIFT)  â†’ L2 (+ FLANN KD-tree);
+- binary uint8 descriptors (ORB/AKAZE)    â†’ Hamming (+ FLANN LSH).
+
+Preserved behavior: BF and FLANN KNN matching, Lowe's ratio test, reciprocal
+(mutual-consistency) filtering, typed matching per evidence family, one-to-one
+(unique source and reference) selection, index-preserving correspondence
+extraction, side-by-side match visualization. Domain-specific defaults from the
+reference implementation (e.g. its domain-specific singleton feature class) are
+removed. This module must not know about verdicts, entropy, gates, or LLMs.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 import cv2
 import numpy as np
+
+from .filtering import flatten_matches, mutual_consistency_filter, ratio_test, unique_train_matches
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "method": "BF",              # "BF" or "FLANN"
@@ -33,7 +40,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "match_same_feature_type": True,
     "unique_train_matches": True,
     "allow_singleton_feature_types": (),
-    "norm": None,                # inferred: L2 for float/SIFT, Hamming for uint8
+    "norm": None,                # inferred: L2 for float, Hamming for uint8
     "flann_trees": 5,
     "flann_checks": 50,
 }
@@ -41,30 +48,40 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 
 @dataclass
 class MatchResult:
-    """Descriptor correspondences, with indices retained in every record."""
+    """Descriptor correspondences, with indices retained in every record.
 
-    candidate_matches: List[cv2.DMatch] = field(default_factory=list)
-    accepted_matches: List[cv2.DMatch] = field(default_factory=list)
+    Carries everything later geometry needs â€” point arrays, accepted index
+    pairs, raw candidates, distances, and filtering diagnostics â€” and no
+    visualization state (``visualize_matches`` renders on demand).
+    """
+
+    candidate_count: int = 0
+    accepted_count: int = 0
     source_points: np.ndarray = field(default_factory=lambda: np.empty((0, 2), np.float32))
     reference_points: np.ndarray = field(default_factory=lambda: np.empty((0, 2), np.float32))
     distances: np.ndarray = field(default_factory=lambda: np.empty((0,), np.float32))
-    number_raw_matches: int = 0
-    number_filtered_matches: int = 0
+    source_indices: np.ndarray = field(default_factory=lambda: np.empty((0,), np.int64))
+    reference_indices: np.ndarray = field(default_factory=lambda: np.empty((0,), np.int64))
+    candidate_matches: List[cv2.DMatch] = field(default_factory=list)
+    accepted_matches: List[cv2.DMatch] = field(default_factory=list)
     match_records: List[Dict[str, Any]] = field(default_factory=list)
+    descriptor_family: Optional[str] = None
+    filter_diagnostics: Dict[str, Any] = field(default_factory=dict)
 
     @property
-    def raw_matches(self) -> int:
-        return self.number_raw_matches
+    def number_raw_matches(self) -> int:
+        """Backwards-compatible alias for :attr:`candidate_count`."""
+        return self.candidate_count
 
     @property
-    def filtered_matches(self) -> int:
-        return self.number_filtered_matches
+    def number_filtered_matches(self) -> int:
+        """Backwards-compatible alias for :attr:`accepted_count`."""
+        return self.accepted_count
 
     @property
     def matches(self) -> List[cv2.DMatch]:
         """The descriptor matches that passed configured filters."""
         return self.accepted_matches
-
 
 def _as_descriptors(descriptors: Any) -> np.ndarray:
     """Normalize descriptors while retaining OpenCV-supported dtype."""
@@ -82,6 +99,7 @@ def _as_descriptors(descriptors: Any) -> np.ndarray:
 
 
 def _norm_for(descriptors: np.ndarray, configured: Any = None) -> int:
+    """Pick the distance norm that matches the descriptor type."""
     if configured is not None:
         if isinstance(configured, str):
             name = configured.upper()
@@ -125,48 +143,6 @@ def match_descriptors(
     return matcher.knnMatch(source, reference, k=k)
 
 
-def ratio_test(matches: Iterable[Sequence[cv2.DMatch]], ratio: float = 0.75) -> List[cv2.DMatch]:
-    """Apply Lowe's nearest-neighbour distance ratio test."""
-    if not 0 < ratio <= 1:
-        raise ValueError("ratio must be in (0, 1].")
-    good: List[cv2.DMatch] = []
-    for neighbours in matches:
-        if not neighbours:
-            continue
-        if len(neighbours) == 1:
-            # No ambiguity estimate exists, so do not silently treat it as good.
-            continue
-        best, runner_up = neighbours[0], neighbours[1]
-        if best.distance < ratio * runner_up.distance:
-            good.append(best)
-    return good
-
-
-def mutual_consistency_filter(
-    source_descriptors: Any,
-    reference_descriptors: Any,
-    matches: Iterable[Any],
-) -> List[cv2.DMatch]:
-    """Keep matches whose nearest neighbour is reciprocal in descriptor space."""
-    source, reference = _as_descriptors(source_descriptors), _as_descriptors(reference_descriptors)
-    flat = _flatten_matches(matches)
-    if not flat or not len(source) or not len(reference):
-        return []
-    reverse = match_descriptors(reference, source, method="BF", config={"knn_k": 1})
-    reverse_pairs = {(group[0].queryIdx, group[0].trainIdx) for group in reverse if group}
-    return [m for m in flat if (m.trainIdx, m.queryIdx) in reverse_pairs]
-
-
-def _flatten_matches(matches: Iterable[Any]) -> List[cv2.DMatch]:
-    flattened: List[cv2.DMatch] = []
-    for item in matches:
-        if isinstance(item, cv2.DMatch):
-            flattened.append(item)
-        elif item:  # permit direct use of KNN output
-            flattened.append(item[0])
-    return flattened
-
-
 def _point(keypoint: Any) -> Tuple[float, float]:
     if hasattr(keypoint, "pt"):
         return float(keypoint.pt[0]), float(keypoint.pt[1])
@@ -184,7 +160,7 @@ def matches_to_correspondences(
 ) -> Tuple[np.ndarray, np.ndarray, List[Dict[str, Any]]]:
     """Convert matches into point arrays and index-preserving plain records."""
     valid: List[cv2.DMatch] = []
-    for m in _flatten_matches(matches):
+    for m in flatten_matches(matches):
         if 0 <= m.queryIdx < len(source_keypoints) and 0 <= m.trainIdx < len(reference_keypoints):
             valid.append(m)
     source_points = np.asarray([_point(source_keypoints[m.queryIdx]) for m in valid], dtype=np.float32).reshape(-1, 2)
@@ -260,18 +236,6 @@ def _typed_candidate_matches(
     return candidates
 
 
-def _unique_train_matches(matches: Iterable[cv2.DMatch]) -> List[cv2.DMatch]:
-    """Keep the lowest-distance match for each source and reference index."""
-    selected: List[cv2.DMatch] = []
-    used_source, used_reference = set(), set()
-    for match in sorted(matches, key=lambda item: item.distance):
-        if match.queryIdx not in used_source and match.trainIdx not in used_reference:
-            selected.append(match)
-            used_source.add(match.queryIdx)
-            used_reference.add(match.trainIdx)
-    return selected
-
-
 def match_feature_sets(
     source_features: Any,
     reference_features: Any,
@@ -285,35 +249,65 @@ def match_feature_sets(
         source_descriptors, reference_descriptors,
         source_keypoints, reference_keypoints, options,
     )
-    filtered = ratio_test(raw, float(options["ratio"])) if int(options["knn_k"]) >= 2 else _flatten_matches(raw)
+    flat_raw = flatten_matches(raw)
+    use_ratio = int(options["knn_k"]) >= 2
+    filtered = ratio_test(raw, float(options["ratio"])) if use_ratio else list(flat_raw)
+    after_ratio = len(filtered)
     # A rare evidence family can have exactly one reference candidate. Lowe's
     # test cannot score that case; retain it only for explicitly configured
     # classes and let one-to-one selection decide.
     singleton_types = set(options.get("allow_singleton_feature_types", ()))
-    if singleton_types and int(options["knn_k"]) >= 2:
-        filtered.extend(
+    retained_singletons = 0
+    if singleton_types and use_ratio:
+        singletons = [
             neighbours[0] for neighbours in raw
             if len(neighbours) == 1 and _feature_type(source_keypoints[neighbours[0].queryIdx]) in singleton_types
-        )
+        ]
+        filtered.extend(singletons)
+        retained_singletons = len(singletons)
     if options["mutual_consistency"]:
         filtered = mutual_consistency_filter(source_descriptors, reference_descriptors, filtered)
+    after_mutual = len(filtered)
     if options["unique_train_matches"]:
-        filtered = _unique_train_matches(filtered)
+        filtered = unique_train_matches(filtered)
+    after_unique = len(filtered)
+
     source_points, reference_points, records = matches_to_correspondences(source_keypoints, reference_keypoints, filtered)
     distances = np.asarray([r["distance"] for r in records], dtype=np.float32)
+    families = sorted({_feature_type(source_keypoints[r["source_index"]]) for r in records})
+    descriptor_family = families[0] if len(families) == 1 and families[0] != "__untyped__" else None
+    diagnostics: Dict[str, Any] = {
+        "configured": {
+            name: options[name]
+            for name in ("method", "ratio", "knn_k", "mutual_consistency", "match_same_feature_type", "unique_train_matches")
+        },
+        "candidate_count": len(flat_raw),
+        "after_ratio_test": after_ratio,
+        "singleton_retained": retained_singletons,
+        "after_mutual_consistency": after_mutual,
+        "after_unique_train": after_unique,
+        "removed_by_ratio": len(flat_raw) - after_ratio,
+        "removed_by_mutual": after_ratio + retained_singletons - after_mutual,
+        "removed_by_unique": after_mutual - after_unique,
+        "source_descriptor_families": families,
+    }
     result = MatchResult(
-        candidate_matches=_flatten_matches(raw),
-        accepted_matches=filtered,
+        candidate_count=len(raw),
+        accepted_count=len(filtered),
         source_points=source_points,
         reference_points=reference_points,
         distances=distances,
-        number_raw_matches=len(raw),
-        number_filtered_matches=len(filtered),
+        source_indices=np.asarray([r["source_index"] for r in records], dtype=np.int64),
+        reference_indices=np.asarray([r["reference_index"] for r in records], dtype=np.int64),
+        candidate_matches=flat_raw,
+        accepted_matches=filtered,
         match_records=records,
+        descriptor_family=descriptor_family,
+        filter_diagnostics=diagnostics,
     )
-    retained = 100.0 * result.number_filtered_matches / result.number_raw_matches if result.number_raw_matches else 0.0
-    print(f"raw matches: {result.number_raw_matches}")
-    print(f"filtered matches: {result.number_filtered_matches}")
+    retained = 100.0 * result.accepted_count / result.candidate_count if result.candidate_count else 0.0
+    print(f"raw matches: {result.candidate_count}")
+    print(f"filtered matches: {result.accepted_count}")
     print(f"percentage retained: {retained:.1f}%")
     return result
 
