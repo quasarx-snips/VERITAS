@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VERITAS - Team KompilerZ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      overflow: hidden;
+      background-color: #070d10;
+      color: #ffffff;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: background 0.6s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s ease;
+    }
+
+    /* NIGHT THEME DEFAULT BACKGROUND */
+    body {
+      background-image: radial-gradient(circle at 50% 40%, #163a48 0%, #0a1c24 45%, #030608 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    /* UPDATED DAYLIGHT COLOR GRADIENT */
+    body.day-mode {
+      background-color: #52bcf8;
+      background-image: linear-gradient(
+        180deg, 
+        #52bcf8 0%, 
+        #bfe8ff 25%, 
+        #ffffff 48%, 
+        #ffffff 52%, 
+        #fff59d 78%, 
+        #ffeb3b 100%
+      );
+      color: #0f172a;
+    }
+
+    .stars-layer, .stars-layer-2 {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    body.day-mode .stars-layer,
+    body.day-mode .stars-layer-2 {
+      opacity: 0;
+    }
+
+    .stars-layer {
+      background-image: 
+        radial-gradient(1.5px 1.5px at 10% 15%, rgba(255, 255, 255, 1), transparent),
+        radial-gradient(2px 2px at 20% 35%, rgba(0, 255, 163, 1), transparent),
+        radial-gradient(1px 1px at 30% 70%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(1.5px 1.5px at 35% 12%, rgba(255, 255, 255, 1), transparent),
+        radial-gradient(2.5px 2.5px at 45% 65%, rgba(0, 255, 163, 1), transparent),
+        radial-gradient(1px 1px at 50% 20%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2.5px 2.5px at 60% 25%, rgba(0, 255, 163, 1), transparent),
+        radial-gradient(1px 1px at 68% 85%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(1.5px 1.5px at 70% 80%, rgba(255, 255, 255, 1), transparent),
+        radial-gradient(2px 2px at 80% 40%, rgba(0, 255, 163, 0.9), transparent),
+        radial-gradient(2px 2px at 85% 18%, rgba(255, 255, 255, 1), transparent),
+        radial-gradient(1.5px 1.5px at 92% 55%, rgba(255, 255, 255, 0.9), transparent);
+      animation: shimmer 1.8s infinite alternate ease-in-out;
+    }
+
+    .stars-layer-2 {
+      background-image: 
+        radial-gradient(2px 2px at 5% 45%, rgba(0, 255, 163, 1), transparent),
+        radial-gradient(1.5px 1.5px at 15% 75%, rgba(255, 255, 255, 0.95), transparent),
+        radial-gradient(2.5px 2.5px at 25% 20%, rgba(56, 189, 248, 1), transparent),
+        radial-gradient(1px 1px at 38% 85%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2.5px 2.5px at 48% 35%, rgba(0, 255, 163, 1), transparent),
+        radial-gradient(1.5px 1.5px at 55% 75%, rgba(255, 255, 255, 1), transparent),
+        radial-gradient(2px 2px at 65% 50%, rgba(56, 189, 248, 0.9), transparent),
+        radial-gradient(1.5px 1.5px at 75% 15%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2.5px 2.5px at 82% 70%, rgba(0, 255, 163, 1), transparent),
+        radial-gradient(1.5px 1.5px at 88% 30%, rgba(255, 255, 255, 1), transparent),
+        radial-gradient(2px 2px at 95% 80%, rgba(56, 189, 248, 0.95), transparent);
+      animation: shimmer2 2.6s infinite alternate ease-in-out 0.6s;
+    }
+
+    @keyframes shimmer {
+      0% { opacity: 0.2; transform: scale(0.97); }
+      50% { opacity: 1; transform: scale(1.02); }
+      100% { opacity: 0.35; transform: scale(1); }
+    }
+
+    @keyframes shimmer2 {
+      0% { opacity: 0.15; transform: scale(1.01); }
+      50% { opacity: 0.95; transform: scale(0.98); }
+      100% { opacity: 0.25; transform: scale(1.01); }
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 36px 0 36px;
+      width: 100%;
+      height: 55px;
+      z-index: 10;
+    }
+
+    .brand-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      color: #00ffa3;
+      font-weight: 900;
+      font-size: 21px;
+      font-family: monospace;
+      text-shadow: none;
+      transition: all 0.3s ease;
+    }
+
+    body.day-mode .brand-icon {
+      color: #0f172a;
+      text-shadow: none;
+    }
+
+    .brand-text h2 {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.2px;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+
+    body.day-mode .brand-text h2 {
+      color: #0f172a;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    }
+
+    .brand-text p {
+      font-size: 13px;
+      font-weight: 700;
+      color: #64748b;
+      margin-top: 1px;
+      transition: color 0.3s ease;
+    }
+
+    body.day-mode .brand-text p {
+      color: #0369a1;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .day-night-toggle {
+      display: flex;
+      background: rgba(13, 25, 32, 0.9);
+      border: 1px solid #1e3540;
+      border-radius: 12px;
+      padding: 3px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+    }
+
+    body.day-mode .day-night-toggle {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+    }
+
+    .toggle-opt {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 5px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .toggle-opt.active {
+      background: #00ffa3;
+      color: #031711;
+      box-shadow: none;
+    }
+
+    body.day-mode .toggle-opt {
+      color: #0284c7;
+    }
+
+    body.day-mode .toggle-opt.active {
+      background: #0f172a;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+    }
+
+    .menu-wrapper {
+      position: relative;
+      width: 160px;
+    }
+
+    .menu-button {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      background: rgba(13, 25, 32, 0.9);
+      border: 1px solid #1e3540;
+      border-radius: 12px;
+      padding: 6px 14px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: border-color 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    body.day-mode .menu-button {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+    }
+
+    .menu-button span {
+      font-weight: 800;
+      font-size: 15px;
+      color: #ffffff;
+      transition: color 0.3s ease;
+    }
+
+    body.day-mode .menu-button span {
+      color: #0f172a;
+    }
+
+    .cat-avatar {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, #00ffa3, #0284c7);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      box-shadow: none;
+    }
+
+    body.day-mode .cat-avatar {
+      background: linear-gradient(135deg, #0284c7, #eab308);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      margin-top: 6px;
+      background: rgba(10, 20, 26, 0.95);
+      border: 1px solid #1e3540;
+      border-radius: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      z-index: 20;
+    }
+
+    body.day-mode .dropdown-menu {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.15);
+    }
+
+    .menu-wrapper:hover .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .menu-wrapper:hover .menu-button {
+      border-color: #00ffa3;
+    }
+
+    body.day-mode .menu-wrapper:hover .menu-button {
+      border-color: #0f172a;
+    }
+
+    .nav-list {
+      list-style: none;
+      padding: 6px 0;
+    }
+
+    .nav-list li a {
+      display: block;
+      padding: 8px 12px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    body.day-mode .nav-list li a {
+      color: #0369a1;
+    }
+
+    .nav-list li a:hover {
+      color: #ffffff;
+      background: rgba(0, 255, 163, 0.08);
+    }
+
+    body.day-mode .nav-list li a:hover {
+      color: #0f172a;
+      background: rgba(15, 23, 42, 0.08);
+    }
+
+    .hero-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 20px;
+      width: 100%;
+      max-width: 1400px;
+      height: calc(100vh - 55px);
+      position: relative;
+      z-index: 2;
+    }
+
+    .main-title {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+      margin-bottom: -1vh;
+      width: 100%;
+    }
+
+    .main-title span {
+      display: inline-block;
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(130px, 30vh, 380px);
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 0.7;
+      margin-right: -0.1em;
+      
+      -webkit-text-stroke: 12px #05080a;
+      paint-order: stroke fill;
+      
+      text-shadow: 
+        1px 2px 0px #0e2029,
+        3px 6px 0px #05080a,
+        6px 10px 0px #00ffa3,
+        8px 14px 22px rgba(0, 0, 0, 0.95);
+
+      filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.95)) brightness(1);
+      position: relative;
+      cursor: pointer;
+      transform-origin: center bottom;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                  text-shadow 0.25s ease, 
+                  color 0.25s ease, 
+                  filter 0.25s ease,
+                  -webkit-text-stroke 0.3s ease;
+    }
+
+    body.day-mode .main-title span {
+      color: #ffffff;
+      -webkit-text-stroke: 10px #0f172a;
+      paint-order: stroke fill;
+      text-shadow: 
+        2px 4px 0px #0284c7,
+        4px 8px 0px #eab308,
+        6px 12px 20px rgba(15, 23, 42, 0.22);
+      filter: drop-shadow(0 12px 24px rgba(15, 23, 42, 0.18));
+    }
+
+    .main-title span:last-child {
+      margin-right: 0;
+    }
+
+    .main-title span:hover {
+      transform: translateY(-32px) scale(1.2) rotate(-2deg);
+      color: #ffffff;
+      filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 1)) brightness(1.2);
+      text-shadow: 
+        1px 2px 0px #0e2029,
+        3px 6px 0px #05080a,
+        6px 10px 0px #38bdf8;
+      z-index: 10;
+    }
+
+    body.day-mode .main-title span:hover {
+      color: #fef08a;
+      -webkit-text-stroke: 10px #031726;
+      text-shadow: 
+        4px 8px 0px #ca8a04;
+      filter: drop-shadow(0 20px 30px rgba(15, 23, 42, 0.3));
+    }
+
+    /* ILLUSTRATION WRAPPER WITH ENLARGED OVERLAPPING ICONS */
+    .illustration-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+      z-index: 2;
+      margin: 10px 0;
+    }
+
+    .graphic-item {
+      position: relative;
+      width: clamp(135px, 20vw, 230px);
+      height: clamp(135px, 20vw, 230px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      background: transparent;
+      filter: drop-shadow(0 12px 24px rgba(0,0,0,0.85));
+      
+      /* Overlap adjacent items using negative margins */
+      margin: 0 clamp(-38px, -4vw, -20px);
+      z-index: 1;
+
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                  filter 0.35s ease, 
+                  background 0.4s ease,
+                  z-index 0.2s ease;
+      animation: floatIcon 4s infinite ease-in-out alternate;
+    }
+
+    .graphic-item:nth-child(1) { z-index: 1; animation-delay: 0s; }
+    .graphic-item:nth-child(2) { z-index: 2; animation-delay: 0.8s; }
+    .graphic-item:nth-child(3) { z-index: 3; animation-delay: 1.6s; }
+    .graphic-item:nth-child(4) { z-index: 4; animation-delay: 2.4s; }
+
+    @keyframes floatIcon {
+      0% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-9px) rotate(1.2deg); }
+      100% { transform: translateY(4px) rotate(-1.2deg); }
+    }
+
+    .graphic-item::before {
+      display: none;
+    }
+
+    .graphic-item:hover {
+      transform: translateY(-14px) scale(1.15);
+      z-index: 15 !important;
+      filter: drop-shadow(0 20px 35px rgba(0, 0, 0, 0.95));
+      cursor: pointer;
+    }
+
+    .graphic-item svg {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    body.day-mode .graphic-item {
+      background: transparent;
+      filter: drop-shadow(0 12px 22px rgba(15, 23, 42, 0.2));
+    }
+
+    body.day-mode .graphic-item:hover {
+      filter: drop-shadow(0 18px 30px rgba(15, 23, 42, 0.3));
+    }
+
+    body.day-mode .graphic-item svg [stroke="#00ffa3"] { stroke: #0f172a; }
+    body.day-mode .graphic-item svg [fill="#00ffa3"] { fill: #0f172a; }
+    body.day-mode .graphic-item svg [stroke="#38bdf8"] { stroke: #0284c7; }
+    body.day-mode .graphic-item svg [fill="#0284c7"] { fill: #0284c7; }
+
+    /* DANCE ANIMATION FOR "PROCEED FURTHER" HOVER */
+    @keyframes danceIcon {
+      0% { transform: translateY(0px) rotate(0deg) scale(1); }
+      20% { transform: translateY(-24px) rotate(-16deg) scale(1.12); }
+      40% { transform: translateY(12px) rotate(12deg) scale(0.92); }
+      60% { transform: translateY(-16px) rotate(-8deg) scale(1.08); }
+      80% { transform: translateY(8px) rotate(6deg) scale(0.96); }
+      100% { transform: translateY(0px) rotate(0deg) scale(1); }
+    }
+
+    body:has(.btn-proceed:hover) .graphic-item {
+      animation: danceIcon 0.6s ease-in-out infinite alternate !important;
+    }
+
+    body:has(.btn-proceed:hover) .graphic-item:nth-child(1) { animation-delay: 0s !important; }
+    body:has(.btn-proceed:hover) .graphic-item:nth-child(2) { animation-delay: 0.12s !important; }
+    body:has(.btn-proceed:hover) .graphic-item:nth-child(3) { animation-delay: 0.24s !important; }
+    body:has(.btn-proceed:hover) .graphic-item:nth-child(4) { animation-delay: 0.36s !important; }
+
+    /* SLOW SWAY TOGETHER ANIMATION FOR MENU BUTTON HOVER */
+    @keyframes swayTogether {
+      0% { transform: translateY(-8px) rotate(-8deg); }
+      50% { transform: translateY(8px) rotate(8deg); }
+      100% { transform: translateY(-8px) rotate(-8deg); }
+    }
+
+    body:has(.menu-wrapper:hover) .graphic-item {
+      animation: swayTogether 2.8s ease-in-out infinite !important;
+    }
+
+    /* PUSHED DOWN TAGLINE LINE */
+    .tagline {
+      font-size: clamp(16px, 2.3vh, 22px);
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.2px;
+      margin: clamp(18px, 2.8vh, 32px) 0 clamp(16px, 2.5vh, 26px) 0;
+      z-index: 5;
+      max-width: 900px;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.9);
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+
+    body.day-mode .tagline {
+      color: #0f172a;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+    }
+
+    /* PUSHED DOWN PROCEED BUTTON */
+    .btn-proceed {
+      background: #00ffa3;
+      color: #031711;
+      font-size: clamp(17px, 2.2vh, 22px);
+      font-weight: 900;
+      padding: clamp(14px, 2vh, 18px) clamp(40px, 4vw, 56px);
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      z-index: 5;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease, color 0.3s ease;
+      margin-bottom: 12px;
+    }
+
+    body.day-mode .btn-proceed {
+      background: #0f172a;
+      color: #ffffff;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-proceed:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    body.day-mode .btn-proceed:hover {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 12px 30px rgba(2, 132, 199, 0.45);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stars-layer"></div>
+  <div class="stars-layer-2"></div>
+
+  <header>
+    <div class="brand-info">
+      <div class="brand-icon">&lt;/&gt;</div>
+      <div class="brand-text">
+        <h2>Team KompilerZ</h2>
+        <p>Code2Create 2026 Gravitas</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="day-night-toggle">
+        <button id="dayBtn" class="toggle-opt" onclick="setTheme('day')">Day</button>
+        <button id="nightBtn" class="toggle-opt active" onclick="setTheme('night')">Night</button>
+      </div>
+
+      <div class="menu-wrapper">
+        <div class="menu-button">
+          <span>Menu</span>
+          <div class="cat-avatar">🐱</div>
+        </div>
+        <div class="dropdown-menu">
+          <ul class="nav-list">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About Team</a></li>
+            <li><a href="#repository">Repository</a></li>
+            <li><a href="#documentation">Documentation</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="hero-container">
+    <h1 class="main-title">
+      <span>V</span>
+      <span>E</span>
+      <span>R</span>
+      <span>I</span>
+      <span>T</span>
+      <span>A</span>
+      <span>S</span>
+    </h1>
+
+    <div class="illustration-wrapper">
+      <div class="graphic-item">
+        <svg viewBox="0 0 240 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="satBodyGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#1e3a4a"/>
+              <stop offset="45%" stop-color="#0e2a38"/>
+              <stop offset="100%" stop-color="#03090d"/>
+            </linearGradient>
+            <linearGradient id="panelGridGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#38bdf8"/>
+              <stop offset="50%" stop-color="#0284c7"/>
+              <stop offset="100%" stop-color="#0369a1"/>
+            </linearGradient>
+          </defs>
+
+          <path d="M 35 45 Q 35 55 25 55 Q 35 55 35 65 Q 35 55 45 55 Q 35 55 35 45 Z" fill="#00ffa3" opacity="0.95"/>
+          <path d="M 50 115 Q 50 122 43 122 Q 50 122 50 129 Q 50 122 57 122 Q 50 122 50 115 Z" fill="#38bdf8" opacity="0.85"/>
+          <path d="M 200 40 Q 200 48 192 48 Q 200 48 200 56 Q 200 48 208 48 Q 200 48 200 40 Z" fill="#00ffa3" opacity="0.95"/>
+          <path d="M 205 155 Q 205 160 200 160 Q 205 160 205 165 Q 205 160 210 160 Q 205 160 205 155 Z" fill="#38bdf8" opacity="0.85"/>
+          <circle cx="68" cy="30" r="2.5" fill="#ffffff" opacity="0.9"/>
+          <circle cx="170" cy="62" r="2.5" fill="#ffffff" opacity="0.9"/>
+
+          <path d="M 108 38 Q 128 15 152 35" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <path d="M 112 37 Q 128 20 148 34 L 126 52 Z" fill="#0284c7" stroke="#00ffa3" stroke-width="2.5"/>
+          <line x1="128" y1="27" x2="142" y2="12" stroke="#00ffa3" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="143" cy="11" r="4" fill="#00ffa3"/>
+          <path d="M 148 12 A 12 12 0 0 1 160 24" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M 153 6 A 18 18 0 0 1 170 23" stroke="#00ffa3" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+          <rect x="117" y="52" width="16" height="12" rx="3" fill="#0c222e" stroke="#38bdf8" stroke-width="2"/>
+
+          <g transform="rotate(-8 60 115)">
+            <rect x="10" y="90" width="72" height="42" rx="4" fill="url(#panelGridGrad)" stroke="#00ffa3" stroke-width="3"/>
+            <line x1="34" y1="90" x2="34" y2="132" stroke="#00ffa3" stroke-width="2"/>
+            <line x1="58" y1="90" x2="58" y2="132" stroke="#00ffa3" stroke-width="2"/>
+            <line x1="10" y1="111" x2="82" y2="111" stroke="#00ffa3" stroke-width="2"/>
+            <polygon points="10,90 40,90 10,120" fill="#ffffff" opacity="0.25"/>
+          </g>
+
+          <g transform="rotate(8 180 115)">
+            <rect x="158" y="90" width="72" height="42" rx="4" fill="url(#panelGridGrad)" stroke="#00ffa3" stroke-width="3"/>
+            <line x1="182" y1="90" x2="182" y2="132" stroke="#00ffa3" stroke-width="2"/>
+            <line x1="206" y1="90" x2="206" y2="132" stroke="#00ffa3" stroke-width="2"/>
+            <line x1="158" y1="111" x2="230" y2="111" stroke="#00ffa3" stroke-width="2"/>
+            <polygon points="158,90 230,90 180,132" fill="#ffffff" opacity="0.2"/>
+          </g>
+
+          <rect x="94" y="64" width="62" height="85" rx="14" fill="url(#satBodyGrad)" stroke="#38bdf8" stroke-width="3.5"/>
+          <rect x="103" y="78" width="44" height="42" rx="8" fill="#07151c" stroke="#00ffa3" stroke-width="2.5"/>
+          <rect x="108" y="83" width="34" height="32" rx="5" fill="#0284c7" opacity="0.5" stroke="#38bdf8" stroke-width="1.5"/>
+
+          <rect x="82" y="103" width="12" height="10" rx="2" fill="#1e3a4a" stroke="#00ffa3" stroke-width="2"/>
+          <rect x="156" y="103" width="12" height="10" rx="2" fill="#1e3a4a" stroke="#00ffa3" stroke-width="2"/>
+
+          <path d="M 106 149 L 144 149 L 149 168 L 101 168 Z" fill="#0b1b24" stroke="#38bdf8" stroke-width="2.5"/>
+          <circle cx="125" cy="168" r="11" fill="#00ffa3" stroke="#00ffa3" stroke-width="2.5"/>
+          <circle cx="125" cy="168" r="5" fill="#00ffa3"/>
+          <rect x="92" y="168" width="14" height="18" rx="3" fill="#091821" stroke="#38bdf8" stroke-width="2"/>
+          <rect x="144" y="168" width="14" height="18" rx="3" fill="#091821" stroke="#38bdf8" stroke-width="2"/>
+        </svg>
+      </div>
+
+      <div class="graphic-item">
+        <svg viewBox="0 0 250 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="earthOcean" cx="40%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#38bdf8"/>
+              <stop offset="45%" stop-color="#0284c7"/>
+              <stop offset="80%" stop-color="#034e75"/>
+              <stop offset="100%" stop-color="#021d2e"/>
+            </radialGradient>
+            <linearGradient id="earthLand" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#4ade80"/>
+              <stop offset="50%" stop-color="#22c55e"/>
+              <stop offset="100%" stop-color="#15803d"/>
+            </linearGradient>
+            <linearGradient id="cloudGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#bae6fd" stop-opacity="0.8"/>
+            </linearGradient>
+          </defs>
+
+          <circle cx="125" cy="125" r="88" fill="url(#earthOcean)" stroke="#38bdf8" stroke-width="3"/>
+
+          <g clip-path="url(#globeClip)">
+            <clipPath id="globeClip">
+              <circle cx="125" cy="125" r="86"/>
+            </clipPath>
+            <path d="M 92 65 C 105 52, 135 48, 158 60 C 170 68, 185 82, 175 102 C 168 115, 150 110, 142 125 C 135 138, 148 152, 140 172 C 130 190, 112 195, 102 178 C 95 160, 108 145, 98 128 C 88 112, 75 122, 68 108 C 60 92, 78 78, 92 65 Z" fill="url(#earthLand)"/>
+            <path d="M 42 70 C 58 65, 68 80, 55 98 C 45 110, 52 130, 48 148 C 45 162, 38 175, 25 168 C 20 150, 28 110, 32 88 Z" fill="url(#earthLand)"/>
+            <path d="M 182 142 C 195 138, 208 148, 202 162 C 192 172, 178 165, 182 142 Z" fill="url(#earthLand)"/>
+          </g>
+
+          <g filter="drop-shadow(0 4px 6px rgba(0,0,0,0.35))">
+            <path d="M 30 82 Q 40 68 62 70 Q 75 58 98 62 Q 115 52 138 60 Q 155 52 175 62 Q 190 55 208 68 Q 225 72 220 86 Q 210 95 185 90 Q 165 98 140 92 Q 115 98 88 90 Q 65 96 42 88 Z" fill="url(#cloudGrad)"/>
+          </g>
+
+          <g filter="drop-shadow(0 4px 8px rgba(0,0,0,0.45))">
+            <path d="M 22 165 Q 38 150 58 152 Q 72 140 95 145 Q 118 135 142 142 Q 168 135 192 148 Q 215 142 232 158 Q 240 172 222 182 Q 198 188 172 180 Q 148 188 122 182 Q 95 188 68 180 Q 42 184 25 174 Z" fill="url(#cloudGrad)"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="graphic-item">
+        <svg viewBox="0 0 260 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="probeBody" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#1e3a4a"/>
+              <stop offset="50%" stop-color="#0e2a38"/>
+              <stop offset="100%" stop-color="#04090d"/>
+            </linearGradient>
+            <linearGradient id="probePanel" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#38bdf8"/>
+              <stop offset="50%" stop-color="#0284c7"/>
+              <stop offset="100%" stop-color="#0369a1"/>
+            </linearGradient>
+          </defs>
+
+          <g transform="rotate(-5 160 80)">
+            <polygon points="140,10 180,0 180,90 140,100" fill="url(#probePanel)" stroke="#00ffa3" stroke-width="2"/>
+            <line x1="160" y1="5" x2="160" y2="95" stroke="#00ffa3" stroke-width="1.5"/>
+            <line x1="140" y1="30" x2="180" y2="20" stroke="#00ffa3" stroke-width="1"/>
+            <line x1="140" y1="55" x2="180" y2="45" stroke="#00ffa3" stroke-width="1"/>
+            <line x1="140" y1="80" x2="180" y2="70" stroke="#00ffa3" stroke-width="1"/>
+
+            <polygon points="186,0 226,-10 226,80 186,90" fill="url(#probePanel)" stroke="#00ffa3" stroke-width="2"/>
+            <line x1="206" y1="-5" x2="206" y2="85" stroke="#00ffa3" stroke-width="1.5"/>
+            <line x1="186" y1="20" x2="226" y2="10" stroke="#00ffa3" stroke-width="1"/>
+            <line x1="186" y1="45" x2="226" y2="35" stroke="#00ffa3" stroke-width="1"/>
+            <line x1="186" y1="70" x2="226" y2="60" stroke="#00ffa3" stroke-width="1"/>
+          </g>
+
+          <g transform="rotate(-5 160 200)">
+            <polygon points="140,140 180,130 180,230 140,240" fill="url(#probePanel)" stroke="#00ffa3" stroke-width="2"/>
+            <line x1="160" y1="135" x2="160" y2="235" stroke="#00ffa3" stroke-width="1.5"/>
+            <line x1="140" y1="165" x2="180" y2="155" stroke="#00ffa3" stroke-width="1"/>
+            <line x1="140" y1="190" x2="180" y2="180" stroke="#00ffa3" stroke-width="1"/>
+            <line x1="140" y1="215" x2="180" y2="205" stroke="#00ffa3" stroke-width="1"/>
+          </g>
+
+          <path d="M 145 105 L 175 88 L 190 100 L 160 118 Z" fill="#0c202d" stroke="#38bdf8" stroke-width="2"/>
+          <ellipse cx="177" cy="94" rx="10" ry="8" fill="#0284c7" stroke="#00ffa3" stroke-width="1.5"/>
+
+          <polygon points="110,110 155,90 175,120 130,140" fill="url(#probeBody)" stroke="#38bdf8" stroke-width="2.5"/>
+          <polygon points="100,125 140,105 155,130 115,150" fill="#081822" stroke="#00ffa3" stroke-width="2"/>
+
+          <polygon points="100,130 130,115 145,138 115,153" fill="#142e3d" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="108" cy="128" r="2.5" fill="#00ffa3"/>
+          <line x1="108" y1="128" x2="102" y2="124" stroke="#00ffa3" stroke-width="2"/>
+          <circle cx="118" cy="123" r="2.5" fill="#00ffa3"/>
+          <line x1="118" y1="123" x2="112" y2="119" stroke="#00ffa3" stroke-width="2"/>
+          <circle cx="128" cy="118" r="2.5" fill="#00ffa3"/>
+          <line x1="128" y1="118" x2="122" y2="114" stroke="#00ffa3" stroke-width="2"/>
+
+          <circle cx="113" cy="136" r="2.5" fill="#38bdf8"/>
+          <circle cx="123" cy="131" r="2.5" fill="#38bdf8"/>
+          <circle cx="133" cy="126" r="2.5" fill="#38bdf8"/>
+
+          <circle cx="118" cy="144" r="2.5" fill="#00ffa3"/>
+          <circle cx="128" cy="139" r="2.5" fill="#00ffa3"/>
+
+          <path d="M 110 120 L 70 110 L 50 95" stroke="#38bdf8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <g transform="translate(42, 90) rotate(-25)">
+            <ellipse cx="0" cy="0" rx="36" ry="18" fill="#0a1d28" stroke="#00ffa3" stroke-width="2"/>
+            <ellipse cx="0" cy="0" rx="26" ry="12" fill="none" stroke="#38bdf8" stroke-width="1"/>
+            <line x1="-36" y1="0" x2="36" y2="0" stroke="#00ffa3" stroke-width="1.5"/>
+            <line x1="0" y1="-18" x2="0" y2="18" stroke="#00ffa3" stroke-width="1.5"/>
+            <line x1="-25" y1="-12" x2="25" y2="12" stroke="#38bdf8" stroke-width="1"/>
+            <line x1="-25" y1="12" x2="25" y2="-12" stroke="#38bdf8" stroke-width="1"/>
+            <line x1="0" y1="0" x2="-12" y2="-22" stroke="#00ffa3" stroke-width="2"/>
+            <circle cx="-12" cy="-22" r="3.5" fill="#00ffa3"/>
+          </g>
+
+          <path d="M 105 135 L 80 145" stroke="#38bdf8" stroke-width="2" fill="none"/>
+          <g transform="translate(72, 148) rotate(-20)">
+            <ellipse cx="0" cy="0" rx="18" ry="9" fill="#091822" stroke="#38bdf8" stroke-width="1.8"/>
+            <line x1="-18" y1="0" x2="18" y2="0" stroke="#00ffa3" stroke-width="1"/>
+            <line x1="0" y1="-9" x2="0" y2="9" stroke="#00ffa3" stroke-width="1"/>
+            <line x1="0" y1="0" x2="-6" y2="-12" stroke="#00ffa3" stroke-width="1.5"/>
+            <circle cx="-6" cy="-12" r="2.5" fill="#00ffa3"/>
+          </g>
+
+          <path d="M 145 135 L 165 175" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
+          <g transform="translate(170, 195) rotate(30)">
+            <ellipse cx="0" cy="0" rx="42" ry="20" fill="#0a1d28" stroke="#00ffa3" stroke-width="2"/>
+            <ellipse cx="0" cy="0" rx="30" ry="14" fill="none" stroke="#38bdf8" stroke-width="1"/>
+            <line x1="-42" y1="0" x2="42" y2="0" stroke="#00ffa3" stroke-width="1.5"/>
+            <line x1="0" y1="-20" x2="0" y2="20" stroke="#00ffa3" stroke-width="1.5"/>
+            <line x1="-30" y1="-14" x2="30" y2="14" stroke="#38bdf8" stroke-width="1"/>
+            <line x1="-30" y1="14" x2="30" y2="-14" stroke="#38bdf8" stroke-width="1"/>
+            <line x1="0" y1="0" x2="15" y2="-25" stroke="#00ffa3" stroke-width="2"/>
+            <circle cx="15" cy="-25" r="4" fill="#00ffa3"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="graphic-item">
+        <svg viewBox="0 0 240 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="droneBody" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#334155"/>
+              <stop offset="50%" stop-color="#0f172a"/>
+              <stop offset="100%" stop-color="#020617"/>
+            </linearGradient>
+            <radialGradient id="cameraLens" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#00ffa3"/>
+              <stop offset="60%" stop-color="#0284c7"/>
+              <stop offset="100%" stop-color="#02131d"/>
+            </radialGradient>
+          </defs>
+
+          <ellipse cx="48" cy="45" rx="42" ry="7" fill="none" stroke="#00ffa3" stroke-width="1.8"/>
+          <ellipse cx="192" cy="45" rx="42" ry="7" fill="none" stroke="#00ffa3" stroke-width="1.8"/>
+          <ellipse cx="28" cy="115" rx="36" ry="6" fill="none" stroke="#38bdf8" stroke-width="1.8"/>
+          <ellipse cx="212" cy="115" rx="36" ry="6" fill="none" stroke="#38bdf8" stroke-width="1.8"/>
+
+          <path d="M 48 52 L 95 82 M 192 52 L 145 82" stroke="#475569" stroke-width="7" stroke-linecap="round"/>
+          <path d="M 48 52 L 95 82 M 192 52 L 145 82" stroke="#00ffa3" stroke-width="2" stroke-linecap="round"/>
+          <path d="M 28 120 L 90 110 M 212 120 L 150 110" stroke="#475569" stroke-width="7" stroke-linecap="round"/>
+
+          <path d="M 85 70 Q 120 52 155 70 L 170 98 Q 120 120 70 98 Z" fill="url(#droneBody)" stroke="#00ffa3" stroke-width="3"/>
+          <circle cx="120" cy="70" r="4" fill="#00ffa3"/>
+
+          <rect x="100" y="126" width="40" height="32" rx="7" fill="#050c12" stroke="#00ffa3" stroke-width="2.5"/>
+          <circle cx="120" cy="142" r="10" fill="url(#cameraLens)" stroke="#38bdf8" stroke-width="2"/>
+          <circle cx="120" cy="142" r="4" fill="#00ffa3"/>
+        </svg>
+      </div>
+
+    </div>
+
+    <p class="tagline">
+      Verifiable Evidence Reasoning with Independent Topological Alignment Systems
+    </p>
+
+    <button class="btn-proceed">Proceed further</button>
+  </main>
+
+  <script>
+    function setTheme(mode) {
+      const dayBtn = document.getElementById('dayBtn');
+      const nightBtn = document.getElementById('nightBtn');
+
+      if (mode === 'day') {
+        document.body.classList.add('day-mode');
+        dayBtn.classList.add('active');
+        nightBtn.classList.remove('active');
+      } else {
+        document.body.classList.remove('day-mode');
+        nightBtn.classList.add('active');
+        dayBtn.classList.remove('active');
+      }
+    }
+  </script>
+</body>
+</html>
