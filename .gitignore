@@ -22,3 +22,8 @@ VERITAS.docx
 outputs/*
 !outputs/.gitkeep
 configs/*.local.*
+
+# Local datasets
+data/raw/*
+data/processed/*
+!data/processed/ds_6.jpg
