@@ -1,0 +1,35 @@
+# Provisional and heuristic thresholds for VERITAS verdict classification.
+# These thresholds are used by the VerdictClassifier to determine the
+# correspondence verdict (STRONG, PARTIAL, WEAK, NONE). They are currently
+# uncalibrated and serve as initial operational values.
+#
+# Future Calibration Note:
+# ------------------------
+# These thresholds are provisional. They will be replaced by statistically
+# calibrated values derived from extensive ground-truth datasets and
+# performance benchmarks in future phases. Do not treat these values as
+# final or statistically validated.
+
+# --- STRONG Verdict Thresholds ---
+strong_inlier_ratio: 0.7
+strong_inlier_count: 50
+strong_spatial_coverage: 0.6
+strong_spatial_entropy: 0.7
+strong_quorum_strength: 0.8
+strong_max_residual: 3.0
+strong_mean_residual: 1.0
+strong_spatial_concentration_threshold: 0.3
+strong_detector_disagreement_threshold: 0.2
+
+# --- PARTIAL Verdict Thresholds ---
+partial_inlier_ratio: 0.4
+partial_inlier_count: 20
+partial_spatial_coverage: 0.3
+partial_spatial_entropy: 0.4
+partial_quorum_strength: 0.5
+partial_max_residual: 5.0
+partial_mean_residual: 2.5
+
+# --- WEAK Verdict Thresholds ---
+weak_inlier_ratio: 0.1
+weak_inlier_count: 5
