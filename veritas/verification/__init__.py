@@ -15,6 +15,8 @@ from .metrics import (
     calculate_rmse,
     evaluate_registration,
 )
+from .evidence import geometry_evidence
+from .fusion import fuse_evidence
 
 __all__ = [
     "EvaluationThresholds",
@@ -23,4 +25,6 @@ __all__ = [
     "calculate_reprojection_errors",
     "calculate_rmse",
     "evaluate_registration",
+    "geometry_evidence",
+    "fuse_evidence",
 ]
