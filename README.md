@@ -138,20 +138,24 @@ docs/                      # Architecture notes
 - [x] Verification metrics (RMSE, P95, inlier statistics)
 - [x] Spatial coverage
 
-### Phase 2: Evidence Intelligence
-- [ ] ORB + AKAZE complementary families
-- [ ] Feature quorum aggregation
-- [ ] Normalized spatial entropy
-- [ ] Counter-evidence engine (residuals, disagreement, concentration)
-- [ ] Partial correspondence verification
-- [ ] Evidence fusion and verdict classifier
-- [ ] Downstream gate implementation
+### Phase 2: Evidence Intelligence ✓
+- ORB + AKAZE complementary families, detector quorum, coverage and entropy
+- Counter-evidence, evidence fusion, and partial correspondence
 
-### Phase 3: Explainability and Benchmarking
-- [ ] Zero-pixel LLM explainer (SGLang structured generation)
-- [ ] ElevenLabs voice briefing integration
-- [ ] Adversarial benchmark harness and ablation studies
-- [ ] Review demonstrations (contrast cases)
+### Phase 3: Decision + Safety Backend ✓
+
+```
+Evidence → Partial correspondence → Verdict → Gate → Audit → Explanation payload
+```
+
+`STRONG`, `PARTIAL`, `WEAK`, and `NONE` are deterministic verdict classes.
+They map by default to `ALLOW`, `RESTRICT`, `HUMAN_REVIEW`, and `BLOCK`.
+The gate is binding: a future LLM cannot override it.
+
+Verdict thresholds are provisional operational heuristics, not calibrated
+probabilities. Calibration remains future work. The explanation payload is
+provider-independent and contains no image pixels; it is ready for future
+SGLang and TTS adapters, but this repository includes neither runtime.
 
 ---
 
@@ -180,6 +184,16 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 pytest
 ```
+
+Run a complete backend decision and write JSON artifacts:
+
+```bash
+python -m scripts.run_veritas --before data/raw/ds_1.png --after data/processed/ds_1.jpg
+```
+
+The command writes the complete report and a zero-pixel explanation payload to
+`outputs/reports/`. No original source repository, TTS provider, SGLang server,
+or API key is required.
 
 ---
 

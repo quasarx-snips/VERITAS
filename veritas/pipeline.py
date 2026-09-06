@@ -23,6 +23,8 @@ from .verdict.schema import VerdictResult
 from .verdict.thresholds import VerdictThresholds
 from .gate import DownstreamSafetyGate, GatePolicy, GateResult
 from .audit import AuditReport, Provenance, build_audit_report
+from .audit.provenance import json_safe
+from .llm import ExplanationPayload, build_explanation_payload
 
 
 @dataclass(frozen=True)
@@ -34,15 +36,32 @@ class VeritasPipelineResult:
     verdict_result: VerdictResult
     gate_result: GateResult
     audit_report: AuditReport
+    explanation_payload: ExplanationPayload
+
+    @property
+    def verdict(self) -> VerdictResult:
+        """Canonical top-level verdict contract (legacy field remains available)."""
+        return self.verdict_result
+
+    @property
+    def gate(self) -> GateResult:
+        """Canonical top-level gate contract (legacy field remains available)."""
+        return self.gate_result
+
+    @property
+    def audit(self) -> AuditReport:
+        """Canonical top-level audit contract (legacy field remains available)."""
+        return self.audit_report
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        return json_safe({
             "evidence": self.evidence.to_dict(),
             "partial_correspondence": self.partial_correspondence.to_dict(),
-            "verdict_result": self.verdict_result.to_dict(),
-            "gate_result": self.gate_result.to_dict(),
-            "audit_report": self.audit_report.to_dict(),
-        }
+            "verdict": self.verdict_result.to_dict(),
+            "gate": self.gate_result.to_dict(),
+            "audit": self.audit_report.to_dict(),
+            "explanation_payload": self.explanation_payload.to_dict(),
+        })
 
 
 @dataclass
@@ -195,6 +214,13 @@ def verify_evidence_pair(
         provenance,
         preprocessing=asdict(preprocessor.enhancer.config),
     )
+    explanation_payload = build_explanation_payload(
+        verification_evidence,
+        partial_correspondence_result,
+        verdict_result,
+        gate_result,
+        audit_report.decision_trace,
+    )
 
     return VeritasPipelineResult(
         evidence=verification_evidence,
@@ -202,4 +228,5 @@ def verify_evidence_pair(
         verdict_result=verdict_result,
         gate_result=gate_result,
         audit_report=audit_report,
+        explanation_payload=explanation_payload,
     )
