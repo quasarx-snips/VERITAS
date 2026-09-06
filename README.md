@@ -84,7 +84,8 @@ demo/                    runnable demos
 | `d12f932` | `migration: add affine geometry` |
 | `fa761a0` | `migration: add verification metrics` |
 
-Implemented: `veritas/preprocessing` (Preprocessor), `veritas/features` (SIFT +
+Implemented: `veritas/preprocessing` (ImagePreprocessor → normalization/CLAHE
+split with `PreprocessedImage` result), `veritas/features` (SIFT +
 RootSIFT + FeatureStore, `FeatureEvidence` in `veritas.schemas`), `veritas/matching`
 (correspondences), `veritas/geometry` (AFFINE-ONLY `verify_affine`), `veritas/verification`
 + `veritas/spatial` (metrics + coverage). Matching stops at descriptor

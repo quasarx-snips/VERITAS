@@ -45,7 +45,7 @@ Priority codes: **P0.1..P0.5** and **P1** follow the mandated migration order.
 
 | Source file | Useful content | VERITAS destination | Priority | Status | Class |
 |---|---|---|---|---|---|
-| `lunax/preprocessing.py` | `ImagePreprocessor` — grayscale/BGR/BGRA/float load+normalise to finite uint8, CLAHE enhance, `process()` | `veritas/preprocessing/` (`preprocessor.py`, class `Preprocessor`) | P0.1 | migrated (bf61878) | A |
+| `lunax/preprocessing.py` | `ImagePreprocessor` — grayscale/BGR/BGRA/float load+normalise to finite uint8, CLAHE enhance, `process()` | `veritas/preprocessing/` (`normalization.py` + `enhancement.py`; facade `ImagePreprocessor` → `PreprocessedImage`) | P0.1 | migrated (bf61878); refined split (this commit) | A |
 | `lunax/features.py` (part) | `TerrainFeature` dataclass → re-framed `FeatureEvidence`; `SiftDetector` (+ RootSIFT L1/sqrt normalisation); `FeatureStore` JSON/NPY persistence; `TerrainVisualizer` | `veritas/features/` (sift.py, store.py, visualization.py) + `veritas/schemas.py` | P0.2 (SIFT), P1 (visualizer) | migrated SIFT+store (4b928f2); visualizer P1 | A/B |
 | `lunax/features.py` (part) | `ONNXCraterDetector`, `CraterDetector` — lunar crater segmentation (ONNX UNet + Hough fallback) | none — domain-specific | — | do not migrate | C |
 | `lunax/features.py` (part) | `RidgeDetector`, `TextureGradientDetector` — generic Canny/Hough-Lines and Sobel-local-max structure detectors; re-framed as gradient/line complementary evidence families (drop "ridge"/"texture" lunar semantics) | `veritas/features/` (deferred) | P1 (feature quorum ingredients) | pending | B |
