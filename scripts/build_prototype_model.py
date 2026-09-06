@@ -25,14 +25,10 @@ SAMPLES = (
     "ds_49", "ds_56", "ds_54", "ds_96", "ds_70", "ds_55", "ds_37", "ds_82", "ds_32", "ds_81",
 )
 
-# The landing page is intentionally concise.  These five are a curated subset
-# of SAMPLES, selected to show real strong, partial, weak, and blocked results.
-CASES = (
-    ("affine_tolerant_match", 62, "Affine-tolerant correspondence", "A real run with a visually dramatic framing difference, yet broad support across all detector families and a full correspondence result."),
-    ("distributed_support", 52, "Distributed correspondence", "A real run with full spatial support and detector agreement across the supplied image pair."),
-    ("partial_overlap", 70, "Partial correspondence", "A real run with visually distinct inputs and limited support; the gate restricts downstream handling."),
-    ("visually_disruptive", 39, "Visually disruptive correspondence", "A real run with weak spatial support despite a visible scene relationship; the gate requires human review."),
-    ("blocked_support", 36, "Insufficient correspondence", "A real run with insufficient geometric and spatial support; the gate blocks downstream use."),
+# Every user-supplied sample is rendered as a first-class prototype case.
+CASES = tuple(
+    (sample, int(sample.removeprefix("ds_")), f"Sample {sample}", "A real deterministic VERITAS backend run from the supplied prototype sample set.")
+    for sample in SAMPLES
 )
 
 PALETTE = {"STRONG": (43, 161, 102), "PARTIAL": (29, 151, 206), "WEAK": (36, 149, 239), "NONE": (67, 78, 94)}
@@ -126,22 +122,23 @@ def comparison_frame(source: Path, destination: Path) -> None:
 
 
 def contact_sheet(cases: list[dict[str, Any]], destination: Path) -> None:
-    canvas = np.full((1650, 2100, 3), (246, 248, 252), np.uint8)
+    columns, card_width, card_height = 4, 495, 310
+    canvas = np.full((1800, 2100, 3), (246, 248, 252), np.uint8)
     cv2.rectangle(canvas, (0, 0), (2100, 135), (15, 23, 42), -1)
     text(canvas, "VERITAS  |  PROTOTYPE MODEL CASES", (55, 80), 1.0, (255, 255, 255), 2)
     for i, case in enumerate(cases):
         report = case["report"]
-        x, y = 45 + (i % 2) * 1025, 180 + (i // 2) * 470
-        cv2.rectangle(canvas, (x, y), (x + 980, y + 420), (255, 255, 255), -1)
-        cv2.rectangle(canvas, (x, y), (x + 980, y + 420), (226, 232, 240), 2)
+        x, y = 40 + (i % columns) * 510, 170 + (i // columns) * 320
+        cv2.rectangle(canvas, (x, y), (x + card_width, y + card_height), (255, 255, 255), -1)
+        cv2.rectangle(canvas, (x, y), (x + card_width, y + card_height), (226, 232, 240), 2)
         visual = cv2.imread(str(case["visual_path"]))
-        place(canvas, visual, x + 18, y + 55, 590, 340)
+        place(canvas, visual, x + 12, y + 45, 290, 245)
         verdict, gate = report["verdict"]["verdict"], report["gate"]["action"]
-        text(canvas, case["case_id"].upper(), (x + 20, y + 35), .55, (15, 23, 42), 2)
-        text(canvas, verdict, (x + 635, y + 105), .72, PALETTE[verdict], 2)
-        text(canvas, gate, (x + 635, y + 150), .58, PALETTE[verdict], 2)
+        text(canvas, case["case_id"].upper(), (x + 14, y + 32), .47, (15, 23, 42), 2)
+        text(canvas, verdict, (x + 320, y + 100), .52, PALETTE[verdict], 2)
+        text(canvas, gate, (x + 320, y + 140), .42, PALETTE[verdict], 2)
         for j, line in enumerate(evidence_lines(report)[:3]):
-            text(canvas, line[:41], (x + 635, y + 215 + j * 37), .43, (30, 41, 59), 1)
+            text(canvas, line[:23], (x + 320, y + 185 + j * 30), .35, (30, 41, 59), 1)
     cv2.imwrite(str(destination), canvas)
 
 
@@ -280,10 +277,10 @@ def build(force: bool = False) -> list[dict[str, Any]]:
     manifest = {"schema_version": "1.0", "purpose": "Curated prototype-model cases generated from real VERITAS backend runs.", "cases": [{"case_id": c["case_id"], "before_image": c["before"].relative_to(ROOT).as_posix(), "after_image": c["after"].relative_to(ROOT).as_posix(), "description": c["description"], "actual_backend_result": {"verdict": c["report"]["verdict"]["verdict"], "gate": c["report"]["gate"]["action"], "partial_correspondence": c["report"]["partial_correspondence"]["status"]}, "report_path": f"outputs/prototype_model/reports/{c['case_id']}.json", "rendered_report_path": f"outputs/prototype_model/reports/{c['case_id']}.html"} for c in curated], "unavailable_categories": ["Semantic change with trustworthy correspondence: no supplied change ground truth or downstream change outputs."]}
     write_json(OUT / "demo_manifest.json", manifest)
     contact_sheet(curated, OUT / "demo_contact_sheet.png"); architecture_visual(OUT / "evidence_architecture.png")
-    detector_case = next(c for c in curated if c["case_id"] == "affine_tolerant_match")
+    detector_case = next(c for c in curated if c["case_id"] == "ds_62")
     detector_visual(detector_case, detector_case["report"], OUT / "detector_comparison.png")
-    spatial_case = next(c for c in curated if c["case_id"] == "visually_disruptive"); spatial_visual(spatial_case, spatial_case["report"], OUT / "spatial_evidence.png")
-    trace_case = next(c for c in curated if c["case_id"] == "affine_tolerant_match"); trace_visual(trace_case, trace_case["report"], OUT / "decision_trace.png")
+    spatial_case = next(c for c in curated if c["case_id"] == "ds_39"); spatial_visual(spatial_case, spatial_case["report"], OUT / "spatial_evidence.png")
+    trace_case = next(c for c in curated if c["case_id"] == "ds_62"); trace_visual(trace_case, trace_case["report"], OUT / "decision_trace.png")
     false_alarm_html(spatial_case, OUT / "false_alarm_defense.html"); overview_html(curated, OUT / "VERITAS_demo_report.html")
     readme, flow, depth, source = documentation(); (OUT / "README.md").write_text(readme, encoding="utf-8"); (OUT / "PROTOTYPE_FLOW.md").write_text(flow, encoding="utf-8"); (OUT / "TECHNICAL_DEPTH.md").write_text(depth, encoding="utf-8"); (OUT / "report-source.md").write_text(source, encoding="utf-8")
     return curated
