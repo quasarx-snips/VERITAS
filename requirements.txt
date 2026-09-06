@@ -1,6 +1,6 @@
 # VERITAS runtime dependencies
 numpy
-opencv-python
+opencv-contrib-python>=4.8,<5
 
 # test/dev
 pytest

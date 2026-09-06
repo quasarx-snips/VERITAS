@@ -11,5 +11,6 @@ complementary gradient/line evidence, not terrain landmarks.
 from .sift import SiftDetector
 from .store import FeatureStore
 from .orb import OrbDetector
+from .akaze import AkazeDetector
 
-__all__ = ["SiftDetector", "OrbDetector", "FeatureStore"]
+__all__ = ["SiftDetector", "OrbDetector", "AkazeDetector", "FeatureStore"]
