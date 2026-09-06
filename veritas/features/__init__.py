@@ -12,5 +12,6 @@ from .sift import SiftDetector
 from .store import FeatureStore
 from .orb import OrbDetector
 from .akaze import AkazeDetector
+from .quorum import assess_quorum
 
-__all__ = ["SiftDetector", "OrbDetector", "AkazeDetector", "FeatureStore"]
+__all__ = ["SiftDetector", "OrbDetector", "AkazeDetector", "FeatureStore", "assess_quorum"]
