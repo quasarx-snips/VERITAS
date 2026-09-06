@@ -1,17 +1,4 @@
-"""VERITAS features — SIFT detector (P0.2 migration).
-
-Migrated from the reference repository's ``SiftDetector``; the proven behavior
-is preserved:
-
-- SIFT keypoints + descriptors via OpenCV;
-- optional RootSIFT normalisation (L1 + square-root) applied to descriptors;
-- ``describe_features`` computes one SIFT descriptor per supplied
-  ``FeatureEvidence`` record, linking each described record to its descriptor
-  row via ``descriptor_index``.
-
-SIFT is one complementary evidence family in the VERITAS evidence chain; it is
-an independent implementation path with its own descriptor failure mode.
-"""
+"""SIFT feature detection and description."""
 
 from __future__ import annotations
 
