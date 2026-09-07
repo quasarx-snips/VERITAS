@@ -24,10 +24,10 @@
       font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
-    /* NIGHT THEME DEFAULT BACKGROUND */
+    /* NIGHT THEME (THEME 2: DARK CHERRY BLOSSOM PALETTE) */
     body {
-      background-color: #070d10;
-      background-image: radial-gradient(circle at 50% 40%, #163a48 0%, #0a1c24 45%, #030608 100%);
+      background-color: #0d040a;
+      background-image: radial-gradient(circle at 50% 40%, #2b0e20 0%, #160611 45%, #070105 100%);
       color: #ffffff;
       display: flex;
       flex-direction: column;
@@ -38,25 +38,24 @@
     }
 
     body.day-mode {
-      color: #0f172a;
+      color: #4a1525;
     }
 
-    /* Day Mode Gradient Overlay */
+    /* DAY THEME OVERLAY (THEME 1: LIGHT SAKURA / SUNSET PALETTE) */
     .day-bg-overlay {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: #52bcf8;
+      background-color: #f4d3dc;
       background-image: linear-gradient(
         180deg,
-        #52bcf8 0%,
-        #bfe8ff 25%,
-        #ffffff 48%,
-        #ffffff 52%,
-        #fff59d 78%,
-        #ffeb3b 100%
+        #f4d3dc 0%,
+        #eeb3c2 30%,
+        #f2cbd5 55%,
+        #f7dfcf 80%,
+        #fbeada 100%
       );
       opacity: 0;
       z-index: 0;
@@ -86,36 +85,37 @@
       opacity: 0;
     }
 
+    /* Subtle Night Stars */
     .stars-layer {
       background-image:
-        radial-gradient(1.5px 1.5px at 10% 15%, rgba(255, 255, 255, 1), transparent),
-        radial-gradient(2px 2px at 20% 35%, rgba(0, 255, 163, 1), transparent),
-        radial-gradient(1px 1px at 30% 70%, rgba(255, 255, 255, 0.9), transparent),
-        radial-gradient(1.5px 1.5px at 35% 12%, rgba(255, 255, 255, 1), transparent),
-        radial-gradient(2.5px 2.5px at 45% 65%, rgba(0, 255, 163, 1), transparent),
-        radial-gradient(1px 1px at 50% 20%, rgba(255, 255, 255, 0.9), transparent),
-        radial-gradient(2.5px 2.5px at 60% 25%, rgba(0, 255, 163, 1), transparent),
-        radial-gradient(1px 1px at 68% 85%, rgba(255, 255, 255, 0.8), transparent),
-        radial-gradient(1.5px 1.5px at 70% 80%, rgba(255, 255, 255, 1), transparent),
-        radial-gradient(2px 2px at 80% 40%, rgba(0, 255, 163, 0.9), transparent),
-        radial-gradient(2px 2px at 85% 18%, rgba(255, 255, 255, 1), transparent),
-        radial-gradient(1.5px 1.5px at 92% 55%, rgba(255, 255, 255, 0.9), transparent);
+        radial-gradient(1.5px 1.5px at 10% 15%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2px 2px at 20% 35%, rgba(216, 112, 147, 0.6), transparent),
+        radial-gradient(1px 1px at 30% 70%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(1.5px 1.5px at 35% 12%, rgba(243, 198, 214, 0.8), transparent),
+        radial-gradient(2.5px 2.5px at 45% 65%, rgba(190, 80, 120, 0.7), transparent),
+        radial-gradient(1px 1px at 50% 20%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(2.5px 2.5px at 60% 25%, rgba(216, 112, 147, 0.6), transparent),
+        radial-gradient(1px 1px at 68% 85%, rgba(255, 255, 255, 0.7), transparent),
+        radial-gradient(1.5px 1.5px at 70% 80%, rgba(243, 198, 214, 0.8), transparent),
+        radial-gradient(2px 2px at 80% 40%, rgba(190, 80, 120, 0.6), transparent),
+        radial-gradient(2px 2px at 85% 18%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(1.5px 1.5px at 92% 55%, rgba(255, 255, 255, 0.8), transparent);
       animation: shimmer 2.4s infinite alternate ease-in-out;
     }
 
     .stars-layer-2 {
       background-image:
-        radial-gradient(2px 2px at 5% 45%, rgba(0, 255, 163, 1), transparent),
-        radial-gradient(1.5px 1.5px at 15% 75%, rgba(255, 255, 255, 0.95), transparent),
-        radial-gradient(2.5px 2.5px at 25% 20%, rgba(56, 189, 248, 1), transparent),
-        radial-gradient(1px 1px at 38% 85%, rgba(255, 255, 255, 0.9), transparent),
-        radial-gradient(2.5px 2.5px at 48% 35%, rgba(0, 255, 163, 1), transparent),
-        radial-gradient(1.5px 1.5px at 55% 75%, rgba(255, 255, 255, 1), transparent),
-        radial-gradient(2px 2px at 65% 50%, rgba(56, 189, 248, 0.9), transparent),
-        radial-gradient(1.5px 1.5px at 75% 15%, rgba(255, 255, 255, 0.9), transparent),
-        radial-gradient(2.5px 2.5px at 82% 70%, rgba(0, 255, 163, 1), transparent),
-        radial-gradient(1.5px 1.5px at 88% 30%, rgba(255, 255, 255, 1), transparent),
-        radial-gradient(2px 2px at 95% 80%, rgba(56, 189, 248, 0.95), transparent);
+        radial-gradient(2px 2px at 5% 45%, rgba(190, 80, 120, 0.7), transparent),
+        radial-gradient(1.5px 1.5px at 15% 75%, rgba(255, 255, 255, 0.85), transparent),
+        radial-gradient(2.5px 2.5px at 25% 20%, rgba(216, 112, 147, 0.6), transparent),
+        radial-gradient(1px 1px at 38% 85%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(2.5px 2.5px at 48% 35%, rgba(243, 198, 214, 0.8), transparent),
+        radial-gradient(1.5px 1.5px at 55% 75%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2px 2px at 65% 50%, rgba(190, 80, 120, 0.6), transparent),
+        radial-gradient(1.5px 1.5px at 75% 15%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(2.5px 2.5px at 82% 70%, rgba(216, 112, 147, 0.7), transparent),
+        radial-gradient(1.5px 1.5px at 88% 30%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2px 2px at 95% 80%, rgba(243, 198, 214, 0.7), transparent);
       animation: shimmer2 3.2s infinite alternate ease-in-out 0.8s;
     }
 
@@ -155,11 +155,11 @@
       width: 38px;
       height: 38px;
       flex-shrink: 0;
-      background: rgba(13, 25, 32, 0.9);
-      border: 1px solid #1e3540;
+      background: rgba(30, 11, 22, 0.85);
+      border: 1px solid #521c38;
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-      color: #00ffa3;
+      color: #f3c6d6;
       font-weight: 900;
       font-size: 15px;
       font-family: monospace;
@@ -167,12 +167,11 @@
     }
 
     body.day-mode .brand-icon {
-      background: rgba(255, 255, 255, 0.7);
-      border-color: rgba(255, 255, 255, 0.9);
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+      background: rgba(255, 235, 240, 0.75);
+      border-color: rgba(200, 110, 140, 0.35);
+      box-shadow: 0 8px 20px rgba(120, 30, 60, 0.1);
+      color: #9d174d;
     }
-
-    body.day-mode .brand-icon { color: #0f172a; }
 
     .brand-text h2 {
       font-size: 18px;
@@ -183,19 +182,19 @@
     }
 
     body.day-mode .brand-text h2 {
-      color: #0f172a;
+      color: #4a1525;
       text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
     }
 
     .brand-text p {
       font-size: 13px;
       font-weight: 700;
-      color: #64748b;
+      color: #ba8e9e;
       margin-top: 1px;
       transition: color 0.4s ease;
     }
 
-    body.day-mode .brand-text p { color: #0369a1; }
+    body.day-mode .brand-text p { color: #8a4f63; }
 
     .header-actions {
       display: flex;
@@ -205,8 +204,8 @@
 
     .day-night-toggle {
       display: flex;
-      background: rgba(13, 25, 32, 0.9);
-      border: 1px solid #1e3540;
+      background: rgba(30, 11, 22, 0.85);
+      border: 1px solid #521c38;
       border-radius: 12px;
       padding: 3px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
@@ -215,15 +214,15 @@
     }
 
     body.day-mode .day-night-toggle {
-      background: rgba(255, 255, 255, 0.7);
-      border-color: rgba(255, 255, 255, 0.9);
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+      background: rgba(255, 235, 240, 0.75);
+      border-color: rgba(200, 110, 140, 0.35);
+      box-shadow: 0 8px 20px rgba(120, 30, 60, 0.1);
     }
 
     .toggle-opt {
       background: transparent;
       border: none;
-      color: #94a3b8;
+      color: #ba8e9e;
       font-family: inherit;
       font-weight: 800;
       font-size: 14px;
@@ -234,16 +233,18 @@
     }
 
     .toggle-opt.active {
-      background: #00ffa3;
-      color: #031711;
+      background: #3d1428;
+      color: #f3c6d6;
+      border: 1px solid #6b2446;
     }
 
-    body.day-mode .toggle-opt { color: #0284c7; }
+    body.day-mode .toggle-opt { color: #8a4f63; }
 
     body.day-mode .toggle-opt.active {
-      background: #0f172a;
+      background: #4a1525;
       color: #ffffff;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+      border: none;
+      box-shadow: 0 4px 14px rgba(74, 21, 37, 0.25);
     }
 
     .menu-wrapper {
@@ -257,8 +258,8 @@
       justify-content: space-between;
       gap: 10px;
       width: 100%;
-      background: rgba(13, 25, 32, 0.9);
-      border: 1px solid #1e3540;
+      background: rgba(30, 11, 22, 0.85);
+      border: 1px solid #521c38;
       border-radius: 12px;
       padding: 6px 14px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
@@ -268,9 +269,9 @@
     }
 
     body.day-mode .menu-button {
-      background: rgba(255, 255, 255, 0.7);
-      border-color: rgba(255, 255, 255, 0.9);
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+      background: rgba(255, 235, 240, 0.75);
+      border-color: rgba(200, 110, 140, 0.35);
+      box-shadow: 0 8px 20px rgba(120, 30, 60, 0.1);
     }
 
     .menu-button span {
@@ -279,12 +280,13 @@
       color: #ffffff;
     }
 
-    body.day-mode .menu-button span { color: #0f172a; }
+    body.day-mode .menu-button span { color: #4a1525; }
 
     .cat-avatar {
       width: 24px;
       height: 24px;
-      background: linear-gradient(135deg, #00ffa3, #0284c7);
+      background: linear-gradient(135deg, #6b2446, #3d1428);
+      border: 1px solid #9c3b68;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -293,7 +295,8 @@
     }
 
     body.day-mode .cat-avatar {
-      background: linear-gradient(135deg, #0284c7, #eab308);
+      background: linear-gradient(135deg, #d81b60, #f48fb1);
+      border: none;
     }
 
     .dropdown-menu {
@@ -302,8 +305,8 @@
       left: 0;
       width: 100%;
       margin-top: 6px;
-      background: rgba(10, 20, 26, 0.95);
-      border: 1px solid #1e3540;
+      background: rgba(22, 8, 17, 0.95);
+      border: 1px solid #521c38;
       border-radius: 12px;
       backdrop-filter: blur(12px);
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
@@ -316,9 +319,9 @@
     }
 
     body.day-mode .dropdown-menu {
-      background: rgba(255, 255, 255, 0.9);
-      border-color: rgba(255, 255, 255, 0.95);
-      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.15);
+      background: rgba(255, 240, 245, 0.95);
+      border-color: rgba(200, 110, 140, 0.4);
+      box-shadow: 0 12px 32px rgba(120, 30, 60, 0.15);
     }
 
     .menu-wrapper:hover .dropdown-menu {
@@ -331,16 +334,16 @@
     .nav-list li a {
       display: block;
       padding: 8px 12px;
-      color: #94a3b8;
+      color: #ba8e9e;
       text-decoration: none;
       font-size: 13px;
       font-weight: 700;
       transition: all 0.2s ease;
     }
 
-    body.day-mode .nav-list li a { color: #0369a1; }
-    .nav-list li a:hover { color: #ffffff; background: rgba(0, 255, 163, 0.08); }
-    body.day-mode .nav-list li a:hover { color: #0f172a; background: rgba(15, 23, 42, 0.08); }
+    body.day-mode .nav-list li a { color: #8a4f63; }
+    .nav-list li a:hover { color: #ffffff; background: rgba(107, 36, 70, 0.3); }
+    body.day-mode .nav-list li a:hover { color: #4a1525; background: rgba(216, 27, 96, 0.1); }
 
     /* MAIN CONTAINER */
     .hero-container {
@@ -356,11 +359,7 @@
       z-index: 2;
     }
 
-    /* ============================================= */
-    /* EARTH STAGE — bounded frame, only a SEGMENT of
-       the Earth sphere is visible, cropped by the
-       frame edge (matches the wireframe sketch)      */
-    /* ============================================= */
+    /* EARTH STAGE */
     .earth-stage {
       display: flex;
       flex-direction: column;
@@ -384,9 +383,6 @@
       box-shadow: none;
     }
 
-    /* The sphere itself sits mostly BELOW the frame,
-       pushed off the bottom edge — only the top dome
-       (a horizon-line segment) shows through, centered */
     .earth-sphere {
       position: absolute;
       bottom: -108%;
@@ -400,7 +396,6 @@
     }
 
     .earth-sphere::before {
-      /* soft glow bleeding past the visible arc */
       content: '';
       position: absolute;
       inset: -6%;
@@ -423,43 +418,45 @@
       100% { transform: translateX(-50%) translateY(-14px) rotate(1.2deg); }
     }
 
-    /* Upload button overlaid on the visible earth dome, centered */
+    /* UPLOAD IMAGES BUTTON - SUBTLE & DARK IN NIGHT MODE */
     .btn-earth-upload {
       position: absolute;
       top: 70%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: #00ffa3;
-      color: #031711;
+      background: rgba(38, 14, 26, 0.92);
+      color: #f3c6d6;
       font-family: inherit;
       font-size: clamp(16px, 2vw, 22px);
-      font-weight: 900;
+      font-weight: 800;
       padding: clamp(14px, 1.8vh, 20px) clamp(28px, 3vw, 46px);
-      border: 2px solid #ffffff;
+      border: 1.5px solid #6b2446;
       border-radius: 50px;
       cursor: pointer;
-      box-shadow: 0 10px 35px rgba(0, 255, 163, 0.7);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
       z-index: 10;
       white-space: nowrap;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .btn-earth-upload:hover {
-      transform: translate(-50%, -50%) scale(1.08);
-      box-shadow: 0 14px 45px rgba(0, 255, 163, 0.95);
-      background: #ffffff;
-      color: #0f172a;
+      transform: translate(-50%, -50%) scale(1.05);
+      box-shadow: 0 12px 35px rgba(107, 36, 70, 0.45);
+      background: #4a182f;
+      color: #ffffff;
+      border-color: #9c3b68;
     }
 
     body.day-mode .btn-earth-upload {
-      background: #0f172a;
+      background: #4a1525;
       color: #ffffff;
-      border-color: #38bdf8;
-      box-shadow: 0 8px 30px rgba(15, 23, 42, 0.4);
+      border-color: #f48fb1;
+      box-shadow: 0 8px 30px rgba(74, 21, 37, 0.3);
     }
 
     body.day-mode .btn-earth-upload:hover {
-      background: #0284c7;
+      background: #d81b60;
       color: #ffffff;
     }
 
@@ -484,8 +481,8 @@
 
     .upload-box {
       flex: 1;
-      background: rgba(13, 25, 32, 0.85);
-      border: 2px dashed #1e3540;
+      background: rgba(28, 11, 21, 0.85);
+      border: 2px dashed #521c38;
       border-radius: 20px;
       padding: 24px;
       display: flex;
@@ -494,41 +491,41 @@
       justify-content: center;
       min-height: 380px;
       backdrop-filter: blur(12px);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
       transition: all 0.3s ease;
       position: relative;
     }
 
     body.day-mode .upload-box {
-      background: rgba(255, 255, 255, 0.85);
-      border-color: rgba(2, 132, 199, 0.4);
-      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
+      background: rgba(255, 235, 240, 0.75);
+      border-color: rgba(200, 110, 140, 0.4);
+      box-shadow: 0 12px 30px rgba(120, 30, 60, 0.1);
     }
 
     .upload-box:hover {
-      border-color: #00ffa3;
+      border-color: #9c3b68;
       transform: translateY(-4px);
     }
 
     body.day-mode .upload-box:hover {
-      border-color: #0284c7;
+      border-color: #d81b60;
     }
 
     .upload-box p {
       font-size: 15px;
       font-weight: 700;
-      color: #94a3b8;
+      color: #ba8e9e;
       margin-bottom: 16px;
     }
 
-    body.day-mode .upload-box p { color: #0369a1; }
+    body.day-mode .upload-box p { color: #8a4f63; }
 
     .file-input { display: none; }
 
     .btn-input-file {
-      background: transparent;
-      border: 2px solid #00ffa3;
-      color: #00ffa3;
+      background: rgba(38, 14, 26, 0.7);
+      border: 1.5px solid #6b2446;
+      color: #f3c6d6;
       font-weight: 800;
       font-size: 16px;
       padding: 12px 28px;
@@ -538,19 +535,22 @@
     }
 
     .btn-input-file:hover {
-      background: #00ffa3;
-      color: #031711;
-      box-shadow: 0 0 20px rgba(0, 255, 163, 0.4);
+      background: #4a182f;
+      color: #ffffff;
+      border-color: #9c3b68;
+      box-shadow: 0 0 15px rgba(107, 36, 70, 0.4);
     }
 
     body.day-mode .btn-input-file {
-      border-color: #0f172a;
-      color: #0f172a;
+      background: transparent;
+      border-color: #4a1525;
+      color: #4a1525;
     }
 
     body.day-mode .btn-input-file:hover {
-      background: #0f172a;
+      background: #4a1525;
       color: #ffffff;
+      box-shadow: none;
     }
 
     .preview-thumb {
@@ -561,23 +561,28 @@
       border-radius: 12px;
       display: none;
       margin-bottom: 12px;
-      border: 1px solid #00ffa3;
+      border: 1px solid #6b2446;
     }
 
-    /* INITIALLY HIDDEN PROCEED BUTTON */
+    body.day-mode .preview-thumb {
+      border-color: #d81b60;
+    }
+
+    /* INITIALLY HIDDEN PROCEED BUTTON - SUBTLE & DARK IN NIGHT MODE */
     .btn-proceed {
       display: none;
-      background: #00ffa3;
-      color: #031711;
+      background: rgba(38, 14, 26, 0.92);
+      color: #f3c6d6;
       font-size: clamp(17px, 2.2vh, 22px);
-      font-weight: 900;
+      font-weight: 800;
       padding: clamp(14px, 2vh, 18px) clamp(40px, 4vw, 56px);
-      border: none;
+      border: 1.5px solid #6b2446;
       border-radius: 30px;
       cursor: pointer;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
       z-index: 5;
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, background 0.3s ease;
       margin-top: 24px;
       margin-bottom: 12px;
     }
@@ -592,19 +597,23 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    body.day-mode .btn-proceed {
-      background: #0f172a;
-      color: #ffffff;
-      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);
-    }
-
     .btn-proceed:hover {
       transform: translate3d(0, -4px, 0) scale(1.03);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      background: #4a182f;
+      color: #ffffff;
+      border-color: #9c3b68;
+      box-shadow: 0 10px 30px rgba(107, 36, 70, 0.5);
+    }
+
+    body.day-mode .btn-proceed {
+      background: #4a1525;
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 10px 25px rgba(74, 21, 37, 0.3);
     }
 
     body.day-mode .btn-proceed:hover {
-      background: #0284c7;
+      background: #d81b60;
       color: #ffffff;
     }
   </style>
@@ -700,7 +709,7 @@
       </div>
     </div>
 
-    <!-- Proceed Button (Revealed only after clicking "Upload Images") -->
+    <!-- Proceed Button -->
     <button id="proceedBtn" class="btn-proceed" onclick="proceedAnalysis()">Proceed with Analysis</button>
 
   </main>
@@ -721,7 +730,6 @@
       }
     }
 
-    /* Reveals Dual Upload Boxes & Bottom Proceed Button */
     function revealUploadBoxes() {
       const earthStage = document.getElementById('earthStage');
       const uploadStage = document.getElementById('uploadStage');
