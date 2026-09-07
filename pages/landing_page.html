@@ -555,6 +555,65 @@
     .graphic-item:nth-child(2) { z-index: 2; animation-delay: 0.9s; }
     .graphic-item:nth-child(3) { z-index: 3; animation-delay: 1.8s; }
     .graphic-item:nth-child(4) { z-index: 4; animation-delay: 2.7s; }
+    .earth-graphic {
+      position: relative;
+      z-index: 6;
+      transform-origin: center center;
+    }
+    
+    body.transitioning {
+      animation: screenShake 0.6s ease-in-out 0.9s both;
+    }
+
+    body.transitioning .graphic-item:not(.earth-graphic),
+    body.transitioning .main-title,
+    body.transitioning .tagline,
+    body.transitioning .btn-proceed,
+    body.transitioning header {
+      animation: pageFadeOut 0.55s ease forwards;
+      pointer-events: none;
+    }
+
+    body.transitioning .stars-layer,
+    body.transitioning .stars-layer-2,
+    body.transitioning .stars-layer-3 {
+      opacity: 0;
+      transition: opacity 0.55s ease;
+    }
+    
+    body.transitioning .earth-graphic {
+      animation: earthLaunch 1.55s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+      pointer-events: none;
+    }
+    
+    @keyframes pageFadeOut {
+      to { opacity: 0; transform: scale(0.94); }
+    }
+
+    @keyframes screenShake {
+      0%, 100% { transform: translate3d(0, 0, 0); }
+      20% { transform: translate3d(-8px, 4px, 0); }
+      40% { transform: translate3d(7px, -5px, 0); }
+      60% { transform: translate3d(-5px, 3px, 0); }
+      80% { transform: translate3d(3px, -2px, 0); }
+    }
+    
+    @keyframes earthLaunch {
+      0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(0deg); filter: drop-shadow(0 12px 24px rgba(0,0,0,0.85)); }
+      42% { opacity: 1; transform: translate3d(0, -12px, 0) scale(1.45) rotate(260deg); filter: drop-shadow(0 22px 34px rgba(0, 255, 163, 0.45)); }
+      76% { opacity: 0.4; transform: translate3d(var(--earth-dx), var(--earth-dy), 0) scale(5.5) rotate(620deg); filter: drop-shadow(0 0 35px rgba(0, 255, 163, 0.3)); }
+      100% { opacity: 0; transform: translate3d(var(--earth-dx), var(--earth-dy), 0) scale(12) rotate(900deg); filter: drop-shadow(0 0 0 rgba(0, 255, 163, 0)); }
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      body.transitioning { animation-duration: 0.2s; }
+      body.transitioning .earth-graphic { animation-duration: 0.35s; }
+      body.transitioning .graphic-item:not(.earth-graphic),
+      body.transitioning .main-title,
+      body.transitioning .tagline,
+      body.transitioning .btn-proceed,
+      body.transitioning header { animation-duration: 0.35s; }
+    }
 
     @keyframes floatIcon {
       0% { transform: translate3d(0px, 0px, 0) rotate(0deg); }
@@ -830,7 +889,7 @@
         </svg>
       </div>
 
-      <div class="graphic-item">
+      <div class="graphic-item earth-graphic">
         <svg viewBox="0 0 250 250" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <radialGradient id="earthOcean" cx="40%" cy="35%" r="65%">
@@ -1003,7 +1062,7 @@
       Verifiable Evidence Reasoning with Independent Topological Alignment Systems
     </p>
 
-    <button class="btn-proceed">Proceed further</button>
+    <button class="btn-proceed" type="button" onclick="proceedToUpload()">Proceed further</button>
   </main>
 
   <script>
@@ -1033,6 +1092,20 @@
         counselBtn.classList.add('active');
         consoleBtn.classList.remove('active');
       }
+    }
+    
+    function proceedToUpload() {
+      if (document.body.classList.contains('transitioning')) return;
+      
+      const earth = document.querySelector('.earth-graphic');
+      const earthBounds = earth.getBoundingClientRect();
+      earth.style.setProperty('--earth-dx', `${(window.innerWidth / 2) - (earthBounds.left + earthBounds.width / 2)}px`);
+      earth.style.setProperty('--earth-dy', `${(window.innerHeight / 2) - (earthBounds.top + earthBounds.height / 2)}px`);
+      document.body.classList.add('transitioning');
+
+      window.setTimeout(() => {
+        window.location.href = 'upload_image.html';
+      }, 1600);
     }
 
     const laserLine = document.getElementById('laser-line');
