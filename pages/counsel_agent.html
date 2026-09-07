@@ -9,33 +9,128 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    /* Dark Mode - Dark Cherry Blossom Palette */
+    /* Midnight Sakura / Dark Magenta design tokens */
+    :root {
+      --bg-canvas: #0e070c;
+      --bg-surface-raw: 28, 14, 23;
+      --bg-surface: rgba(var(--bg-surface-raw), 0.65);
+      --bg-surface-hover: rgba(var(--bg-surface-raw), 0.85);
+      --bg-surface-inset: rgba(18, 8, 15, 0.7);
+      --bg-pill-inactive: rgba(255, 255, 255, 0.05);
+      --text-primary: #ffffff;
+      --text-secondary: #e2c2d4;
+      --text-muted: #aa8d9e;
+      --text-disabled: #695261;
+      --text-accent: #f2a2b6;
+      --accent-primary: #f2a2b6;
+      --accent-secondary: #b86882;
+      --accent-hover: #f5b8c7;
+      --accent-track: #2a1622;
+      --border-subtle: rgba(242, 162, 182, 0.12);
+      --border-strong: rgba(242, 162, 182, 0.30);
+      --border-pill: rgba(255, 255, 255, 0.10);
+      --glow-active: 0 0 20px rgba(242, 162, 182, 0.40);
+      --glow-ambient: 0 0 120px rgba(242, 162, 182, 0.08);
+      --radius-card: 20px;
+      --radius-pill: 9999px;
+      --blur-glass: blur(16px) saturate(140%);
+      --font-main: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+      --ui-text-primary: var(--text-primary);
+      --ui-text-secondary: var(--text-secondary);
+      --ui-text-muted: var(--text-muted);
+      --ui-text-accent: var(--text-accent);
+      --ui-heading: var(--text-primary);
+      --ui-on-accent: var(--bg-canvas);
+    }
+
+    /* Keep typography metrics identical in both color themes. */
+    body.font-sans,
+    .brand-title,
+    .brand-subtitle {
+      font-family: var(--font-main);
+    }
+
+    /* Dark Mode - Midnight Sakura palette */
     .dark body {
-      background: radial-gradient(circle at 50% 20%, #241118 0%, #15090d 60%, #0c0407 100%), #0c0407;
-      color: #f7e8ee;
+      background: radial-gradient(circle at 50% 20%, rgba(242, 162, 182, 0.08) 0%, transparent 48%), var(--bg-canvas);
+      color: var(--ui-text-secondary);
+      font-family: var(--font-main);
     }
     .dark .glass-card {
-      background-color: rgba(36, 17, 24, 0.7);
-      border-color: rgba(230, 150, 180, 0.15);
-      backdrop-filter: blur(12px);
+      background-color: var(--bg-surface);
+      border-color: var(--border-subtle);
+      border-radius: var(--radius-card);
+      backdrop-filter: var(--blur-glass);
+      -webkit-backdrop-filter: var(--blur-glass);
     }
     .dark .glass-card-hover:hover {
-      background-color: rgba(55, 24, 36, 0.85);
-      border-color: rgba(243, 166, 192, 0.4);
-      box-shadow: 0 10px 30px -10px rgba(230, 150, 180, 0.15);
+      background-color: var(--bg-surface-hover);
+      border-color: var(--border-strong);
+      box-shadow: var(--glow-active);
     }
     .dark .accent-text {
-      color: #f3a6c0;
+      color: var(--ui-text-accent);
     }
     .dark .accent-bg {
-      background-color: #f3a6c0;
-      color: #15090d;
+      background-color: var(--accent-primary);
+      color: var(--bg-canvas);
+    }
+
+    /*
+      Keep the welcome heading readable while the theme class is changing.
+      A clipped, transparent text fill depends on its background gradient being
+      available on the same paint.  In light mode that can briefly leave the
+      first characters looking like the page background, so use an opaque,
+      high-contrast fill there instead.
+    */
+    .brand-title {
+      color: var(--ui-heading);
+      background-image: linear-gradient(90deg, var(--text-primary) 0%, var(--accent-primary) 52%, var(--accent-secondary) 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-synthesis: none;
+      text-rendering: geometricPrecision;
+    }
+    html:not(.dark) .brand-title {
+      background-image: none;
+      color: var(--ui-heading);
+      -webkit-text-fill-color: currentColor;
+    }
+    .brand-subtitle {
+      color: var(--ui-text-secondary);
+    }
+    html:not(.dark) .brand-subtitle {
+      color: var(--ui-text-secondary);
+    }
+
+    /* Text semantics remain equivalent when the theme is switched. */
+    #prompt-input {
+      color: var(--ui-text-primary);
+    }
+    #prompt-input::placeholder {
+      color: var(--ui-text-muted);
+      opacity: 1;
+    }
+    #send-btn[disabled] {
+      color: var(--ui-text-muted);
+    }
+    #send-btn:not([disabled]) {
+      color: var(--ui-on-accent);
     }
 
     /* Light Mode - Enhanced Contrast & High-Legibility Borders */
+    html:not(.dark) {
+      --ui-text-primary: #1f0b13;
+      --ui-text-secondary: #4a1024;
+      --ui-text-muted: #754056;
+      --ui-text-accent: #882449;
+      --ui-heading: #5b1029;
+      --ui-on-accent: #ffffff;
+    }
     html:not(.dark) body {
       background: linear-gradient(135deg, #fdf6f8 0%, #f7e4eb 50%, #f1d2dd 100%);
-      color: #1f0b13;
+      color: var(--ui-text-secondary);
     }
     html:not(.dark) .glass-card {
       background-color: rgba(255, 255, 255, 0.85);
@@ -49,7 +144,7 @@
       box-shadow: 0 8px 24px -2px rgba(136, 36, 73, 0.2);
     }
     html:not(.dark) .accent-text {
-      color: #882449;
+      color: var(--ui-text-accent);
     }
     html:not(.dark) .accent-bg {
       background-color: #882449;
@@ -58,18 +153,18 @@
 
     /* Custom Input Bar & Attachment Boxes */
     .attachment-box {
-      border: 1px dashed rgba(243, 166, 192, 0.25);
-      background-color: rgba(28, 12, 18, 0.6);
+      border: 1px dashed var(--border-strong);
+      background-color: var(--bg-surface-inset);
       transition: all 0.2s ease;
     }
     .attachment-box:hover {
-      border-color: #f3a6c0;
-      background-color: rgba(48, 20, 31, 0.8);
+      border-color: var(--accent-hover);
+      background-color: var(--bg-surface-hover);
     }
     .attachment-box.attached {
       border-style: solid;
-      border-color: #f3a6c0;
-      background-color: rgba(243, 166, 192, 0.15);
+      border-color: var(--accent-primary);
+      background-color: rgba(242, 162, 182, 0.15);
     }
     html:not(.dark) .attachment-box {
       border: 1px solid rgba(136, 36, 73, 0.4);
@@ -94,14 +189,14 @@
       background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(243, 166, 192, 0.25);
+      background: rgba(242, 162, 182, 0.25);
       border-radius: 9999px;
     }
     html:not(.dark) ::-webkit-scrollbar-thumb {
       background: rgba(136, 36, 73, 0.3);
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(243, 166, 192, 0.5);
+      background: rgba(242, 162, 182, 0.5);
     }
 
     /* Shimmer Loader */
@@ -121,7 +216,7 @@
     <!-- SIDEBAR -->
     <aside
       id="sidebar"
-      class="w-72 flex flex-col justify-between p-3 transition-all duration-300 ease-in-out border-r shrink-0 z-20 glass-card"
+      class="w-16 flex flex-col justify-between p-3 transition-all duration-300 ease-in-out border-r shrink-0 z-20 glass-card"
     >
       <!-- Top Section -->
       <div class="flex flex-col gap-4">
@@ -129,11 +224,13 @@
           <button
             id="toggle-sidebar-btn"
             class="p-2 rounded-full hover:bg-rose-500/10 transition-colors border border-transparent dark:border-transparent dark:hover:border-rose-500/20 hover:border-rose-900/20"
-            title="Toggle menu"
+            type="button"
+            aria-label="Close navigation menu"
+            title="Close menu"
           >
             <i data-lucide="menu" class="w-5 h-5 accent-text"></i>
           </button>
-          <span class="sidebar-label font-bold tracking-wider text-lg flex items-center gap-1.5 accent-text">
+          <span class="sidebar-label hidden font-bold tracking-wider text-lg flex items-center gap-1.5 accent-text">
             <i data-lucide="shield-check" class="w-5 h-5 accent-text"></i> VERITAS
           </span>
         </div>
@@ -144,11 +241,11 @@
           class="flex items-center justify-start gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all glass-card hover:border-[#f3a6c0] dark:hover:border-[#f3a6c0] border accent-text shadow-sm"
         >
           <i data-lucide="plus" class="w-5 h-5"></i>
-          <span class="sidebar-label font-semibold">New session</span>
+          <span class="sidebar-label hidden font-semibold">New session</span>
         </button>
 
         <!-- Recent Sessions List -->
-        <div id="recent-container" class="sidebar-label mt-4 flex flex-col gap-1 overflow-y-auto max-h-[50vh] pr-1">
+        <div id="recent-container" class="sidebar-label hidden mt-4 flex flex-col gap-1 overflow-y-auto max-h-[50vh] pr-1">
           <span class="text-xs font-bold px-3 mb-1 uppercase tracking-widest accent-text inline-block">Verification Logs</span>
           <div id="chats-list" class="flex flex-col gap-1">
             <!-- Dynamic sessions inserted here -->
@@ -163,15 +260,15 @@
           class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm hover:bg-rose-500/10 transition-colors font-medium"
         >
           <i data-lucide="sun" id="theme-icon" class="w-4 h-4 accent-text"></i>
-          <span class="sidebar-label" id="theme-text">Light mode</span>
+          <span class="sidebar-label hidden" id="theme-text">Light mode</span>
         </button>
         <button class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm hover:bg-rose-500/10 transition-colors font-medium">
           <i data-lucide="help-circle" class="w-4 h-4"></i>
-          <span class="sidebar-label">Help & Documentation</span>
+          <span class="sidebar-label hidden">Help & Documentation</span>
         </button>
         <button class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm hover:bg-rose-500/10 transition-colors font-medium">
           <i data-lucide="settings" class="w-4 h-4"></i>
-          <span class="sidebar-label">Settings</span>
+          <span class="sidebar-label hidden">Settings</span>
         </button>
       </div>
     </aside>
@@ -180,15 +277,15 @@
     <main class="flex-1 flex flex-col h-full relative overflow-hidden">
 
       <!-- CHAT VIEWPORT -->
-      <div id="chat-viewport" class="flex-1 overflow-y-auto px-4 md:px-24 py-6 space-y-6">
+      <div id="chat-viewport" class="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-6">
         
         <!-- Welcome Screen (Default Empty State) -->
-        <div id="welcome-screen" class="max-w-3xl mx-auto flex flex-col items-start justify-center min-h-[70vh] space-y-8 py-6">
+        <div id="welcome-screen" class="max-w-6xl mx-auto flex flex-col items-start justify-center min-h-[70vh] space-y-8 py-6">
           <div class="space-y-2 w-full">
-            <h1 id="random-title" class="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-[#3a081a] via-[#701a3c] to-[#9e2d53] dark:from-[#fdf6f8] dark:via-[#f3a6c0] dark:to-[#a84265] bg-clip-text text-transparent pb-2 leading-tight inline-block drop-shadow-sm">
+            <h1 id="random-title" class="brand-title text-4xl md:text-5xl font-extrabold tracking-tight pb-2 leading-tight inline-block drop-shadow-sm">
               <!-- Dynamic randomized title -->
             </h1>
-            <h2 id="random-subtitle" class="text-xl md:text-2xl font-bold text-[#4a1024] dark:text-[#f7e8ee]">
+            <h2 id="random-subtitle" class="brand-subtitle text-xl md:text-2xl font-bold">
               <!-- Dynamic randomized subtitle -->
             </h2>
           </div>
@@ -250,12 +347,12 @@
         </div>
 
         <!-- Chat Messages Container -->
-        <div id="messages-container" class="hidden max-w-3xl mx-auto space-y-8">
+        <div id="messages-container" class="hidden max-w-6xl mx-auto space-y-8">
           <!-- Messages dynamically appended here -->
         </div>
 
         <!-- Loading Spinner / Shimmer Indicator -->
-        <div id="loading-indicator" class="hidden max-w-3xl mx-auto flex gap-4 items-start">
+        <div id="loading-indicator" class="hidden max-w-6xl mx-auto flex gap-4 items-start">
           <div class="w-8 h-8 rounded-full accent-bg flex items-center justify-center shrink-0 animate-bounce">
             <i data-lucide="sparkles" class="w-4 h-4"></i>
           </div>
@@ -269,8 +366,8 @@
       </div>
 
       <!-- PROMPT INPUT CONTAINER -->
-      <div class="px-4 md:px-24 pb-6 pt-2">
-        <div class="max-w-3xl mx-auto relative flex flex-col gap-2.5">
+      <div class="px-4 md:px-8 pb-6 pt-2">
+        <div class="max-w-6xl mx-auto relative flex flex-col gap-2.5">
           
           <!-- Hidden File Inputs -->
           <input type="file" id="file-input-ref" accept="image/*" class="hidden" />
@@ -354,14 +451,13 @@
       "VERITAS Correspondence Inspection Engine"
     ];
 
-    const randomSubtitles = [
-      "Select an investigation protocol below or attach image pairs for forensic evaluation.",
-      "Initiating VERITAS verification pipeline... Provide dual media inputs to generate certificate.",
-      "System ready. Upload primary and reference images or pick a standard query protocol.",
-      "Standing by for forensic image analysis. Select a command or attach file pairs below.",
-      "VERITAS engine initialized. Select a prompt or upload image pairs to begin verification.",
-      "Ready to process geometric correspondence. Select an action card or attach reference data.",
-      "Forensic protocol loaded. Upload image sources to generate verified analytical metrics."
+    const GREETINGS = [
+      "VERITAS reporting for duty.",
+      "Correspondence console online.",
+      "Trust correspondence before trusting change.",
+      "Affine lock engaged. Homography denied at the door.",
+      "Zero-pixel agent standing by — I orchestrate, I never look.",
+      "Evidence first. Verdicts second. Pixels never."
     ];
 
     let sessionCounter = 1;
@@ -375,7 +471,7 @@
     let referenceImage = null; 
     let sourceImage = null;    
     let isDarkMode = true;
-    let sidebarExpanded = true;
+    let sidebarExpanded = false;
     let isRecording = false;
     let recognition = null;
 
@@ -451,13 +547,13 @@
 
     function setRandomHeader() {
       const titleIndex = Math.floor(Math.random() * randomTitles.length);
-      const subIndex = Math.floor(Math.random() * randomSubtitles.length);
+      const greetingIndex = Math.floor(Math.random() * GREETINGS.length);
       
       if (randomTitleEl) {
         randomTitleEl.textContent = randomTitles[titleIndex];
       }
       if (randomSubtitleEl) {
-        randomSubtitleEl.textContent = randomSubtitles[subIndex];
+        randomSubtitleEl.textContent = GREETINGS[greetingIndex];
       }
     }
 
