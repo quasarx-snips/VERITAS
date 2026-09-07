@@ -21,6 +21,8 @@ from pathlib import Path
 from typing import Any, Dict
 
 from veritas.pipeline import verify_evidence_pair
+from veritas.features import SiftDetector, OrbDetector, AkazeDetector
+from veritas.preprocessing import ImagePreprocessor
 from veritas.llm.runtime import explain
 from veritas.runtime_config import GeminiSettings
 from veritas.tts import synthesize
@@ -43,6 +45,39 @@ def process_verification(before_path: str, after_path: str, *, enable_llm: bool 
         explanation = explain(result.explanation_payload)
     if enable_tts:
         tts = synthesize(explanation["text"])
+
+    # Extract SIFT, ORB, and AKAZE keypoint samples for visual inspection
+    detector_keypoints: Dict[str, Any] = {
+        "sift": {"before_count": 0, "after_count": 0, "before_keypoints": [], "after_keypoints": []},
+        "orb": {"before_count": 0, "after_count": 0, "before_keypoints": [], "after_keypoints": []},
+        "akaze": {"before_count": 0, "after_count": 0, "before_keypoints": [], "after_keypoints": []},
+    }
+    try:
+        detector_instances = {"sift": SiftDetector(), "orb": OrbDetector(), "akaze": AkazeDetector()}
+        preprocessor = ImagePreprocessor()
+        src_proc, ref_proc = preprocessor.process(after_path), preprocessor.process(before_path)
+
+        for name, det in detector_instances.items():
+            try:
+                ref_feats, _ = det.detect(ref_proc.enhanced)
+                src_feats, _ = det.detect(src_proc.enhanced)
+                ref_h, ref_w = ref_proc.source_shape[:2] if hasattr(ref_proc, "source_shape") else (480, 640)
+                src_h, src_w = src_proc.source_shape[:2] if hasattr(src_proc, "source_shape") else (480, 640)
+                detector_keypoints[name] = {
+                    "before_count": len(ref_feats),
+                    "after_count": len(src_feats),
+                    "before_width": ref_w,
+                    "before_height": ref_h,
+                    "after_width": src_w,
+                    "after_height": src_h,
+                    "before_keypoints": [[round(f.x, 1), round(f.y, 1), round(f.scale, 1)] for f in ref_feats[:300]],
+                    "after_keypoints": [[round(f.x, 1), round(f.y, 1), round(f.scale, 1)] for f in src_feats[:300]],
+                }
+            except Exception as det_err:
+                logger.warning("Detector %s extraction error: %s", name, det_err)
+    except Exception as proc_err:
+        logger.warning("Preprocessing for detector keypoints skipped or failed: %s", proc_err)
+
     response = {
         "status": "success",
         "verdict": {
@@ -63,6 +98,7 @@ def process_verification(before_path: str, after_path: str, *, enable_llm: bool 
             "run_id": result.audit.run_id,
             "timestamp": getattr(result.audit, "timestamp", result.audit.provenance.get("timestamp") if hasattr(result.audit, "provenance") else None),
         },
+        "detectors": detector_keypoints,
         "explanation": explanation,
         "summary": result.to_dict(),
     }
