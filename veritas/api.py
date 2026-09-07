@@ -19,17 +19,31 @@ from pathlib import Path
 from typing import Any, Dict
 
 from veritas.pipeline import verify_evidence_pair
+from veritas.llm.runtime import explain
+from veritas.runtime_config import GeminiSettings
+from veritas.tts import synthesize
 
 
-def process_verification(before_path: str, after_path: str) -> Dict[str, Any]:
+def process_verification(before_path: str, after_path: str, *, enable_llm: bool = False,
+                         enable_tts: bool = False) -> Dict[str, Any]:
     """Execute VERITAS deterministic verification pipeline on an image pair."""
     result = verify_evidence_pair(before_path, after_path)
-    return {
+    explanation = result.explanation_payload.to_dict()
+    tts: Dict[str, Any] | None = None
+    if enable_llm or enable_tts:
+        # Voice mode always requests the human-readable explanation first; both
+        # providers remain strictly downstream of the immutable pipeline result.
+        explanation = explain(result.explanation_payload)
+    if enable_tts:
+        tts = synthesize(explanation["text"])
+    response = {
         "status": "success",
         "verdict": {
             "verdict": result.verdict.verdict.value,
             "rationale_codes": result.verdict.rationale_codes,
-            "threshold_profile": result.verdict.threshold_profile,
+            # Older callers expect this label although VerdictResult no longer
+            # stores it as a field.
+            "threshold_profile": getattr(result.verdict, "threshold_profile", "default"),
         },
         "gate": {
             "action": result.gate.action.value,
@@ -37,15 +51,29 @@ def process_verification(before_path: str, after_path: str) -> Dict[str, Any]:
         },
         "partial_correspondence": {
             "status": result.partial_correspondence.status.value,
-            "rationale": result.partial_correspondence.rationale,
-            "confidence": result.partial_correspondence.confidence,
+            # Keep the legacy frontend fields while the canonical object exposes
+            # coverage and per-region evidence instead of a confidence claim.
+            "rationale": getattr(result.partial_correspondence, "rationale", "See regional correspondence evidence."),
+            "confidence": getattr(result.partial_correspondence, "confidence", getattr(result.partial_correspondence, "coverage_fraction", 0.0)),
         },
         "audit": {
             "run_id": result.audit.run_id,
-            "timestamp": result.audit.timestamp,
+            "timestamp": getattr(result.audit, "timestamp", result.audit.provenance.get("timestamp") if hasattr(result.audit, "provenance") else None),
         },
-        "explanation": result.explanation_payload.to_dict(),
+        "explanation": explanation,
         "summary": result.to_dict(),
+    }
+    if tts is not None:
+        response["tts"] = tts
+    return response
+
+
+def runtime_health() -> Dict[str, Any]:
+    """Report configuration only; this endpoint never exposes credentials."""
+    gemini = GeminiSettings.from_env()
+    return {
+        "gemini": {"configured": gemini.configured, "reachable": None,
+                   "model": gemini.model},
     }
 
 
@@ -63,11 +91,11 @@ class VeritasAPIHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self) -> None:
-        if self.path in ("/", "/api/health", "/health"):
+        if self.path in ("/", "/api/health", "/health", "/api/runtime"):
             self._set_cors_headers(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            response = {
+            response = runtime_health() if self.path == "/api/runtime" else {
                 "service": "VERITAS Backend Verification Engine",
                 "status": "healthy",
                 "version": "1.0.0",
@@ -102,6 +130,8 @@ class VeritasAPIHandler(BaseHTTPRequestHandler):
 
                 before_path = payload.get("before_path")
                 after_path = payload.get("after_path")
+                enable_llm = bool(payload.get("enable_llm", False))
+                enable_tts = bool(payload.get("enable_tts", False))
 
                 # Support base64 image input for frontend clients
                 before_b64 = payload.get("before_base64")
@@ -135,7 +165,7 @@ class VeritasAPIHandler(BaseHTTPRequestHandler):
                 )
                 return
 
-            result = process_verification(before_path, after_path)
+            result = process_verification(before_path, after_path, enable_llm=enable_llm, enable_tts=enable_tts)
 
             self._set_cors_headers(200)
             self.send_header("Content-Type", "application/json")

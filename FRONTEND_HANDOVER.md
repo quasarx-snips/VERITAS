@@ -24,6 +24,8 @@ Server runs by default on `http://localhost:8000` with **CORS enabled** (`*`), a
 
 ## 2. API Endpoints Specification
 
+**VERITAS makes the decision. Gemini explains the decision.** The deterministic verdict and gate are authoritative in every mode.
+
 ### Endpoint 1: Health Check
 - **URL**: `GET /api/health`
 - **Response**:
@@ -59,6 +61,14 @@ Ideal when the user selects files in the browser via `<input type="file">`:
   "after_base64": "/9j/4AAQSkZJRgABAQAAAQ..."
 }
 ```
+
+#### Optional explanation and voice flags
+
+```json
+{"before_path":"samples/sample_before.png", "after_path":"samples/sample_after.jpg", "enable_llm":true, "enable_tts":true}
+```
+
+Both flags default to `false`. With `enable_llm`, `explanation` contains `{source, text, structured, runtime}`. `source` becomes `deterministic` if Gemini is unavailable or its free-tier limit is reached. `enable_tts` is retained for backward-compatible requests but returns a disabled status; render `explanation.text` directly.
 
 ---
 

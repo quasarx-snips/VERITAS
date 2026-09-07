@@ -29,6 +29,22 @@ python -m veritas.api --port 8000
 python -m scripts.run_veritas --before samples/sample_before.png --after samples/sample_after.jpg
 ```
 
+## AI Explanation Runtime
+
+**VERITAS makes the decision. Gemini explains the decision.** Gemini is opt-in and cannot alter evidence, verdict, or gate action.
+
+Copy `.env.example` to `.env`, then add credentials locally (never in chat or git):
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/app/apikey), then populate `GEMINI_API_KEY`. The default `gemini-flash-lite-latest` alias selects Google's current low-cost/free-tier-friendly Flash-Lite model. Install dependencies with `pip install -r requirements.txt`.
+
+No local model, GPU, model download, or extra SDK is required. VERITAS sends only the existing structured zero-pixel explanation payload to Gemini. Gemini's free tier is rate-limited and availability is controlled by your Google account/project; provider failure returns the deterministic explanation.
+
+Use `enable_llm: true` for Gemini explanation mode in `POST /api/verify`. `enable_tts` is accepted for compatibility but reports disabled; text remains available. Run `python -m scripts.test_runtime` for explicit live Gemini status.
+
 ---
 
 ## Directory Structure
