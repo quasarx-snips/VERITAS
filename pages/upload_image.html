@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
-  
+
   <style>
     * {
       box-sizing: border-box;
@@ -50,12 +50,12 @@
       height: 100%;
       background-color: #52bcf8;
       background-image: linear-gradient(
-        180deg, 
-        #52bcf8 0%, 
-        #bfe8ff 25%, 
-        #ffffff 48%, 
-        #ffffff 52%, 
-        #fff59d 78%, 
+        180deg,
+        #52bcf8 0%,
+        #bfe8ff 25%,
+        #ffffff 48%,
+        #ffffff 52%,
+        #fff59d 78%,
         #ffeb3b 100%
       );
       opacity: 0;
@@ -78,7 +78,7 @@
       pointer-events: none;
       z-index: 1;
       transition: opacity 0.6s ease;
-      will-change: opacity, transform; 
+      will-change: opacity, transform;
     }
 
     body.day-mode .stars-layer,
@@ -87,7 +87,7 @@
     }
 
     .stars-layer {
-      background-image: 
+      background-image:
         radial-gradient(1.5px 1.5px at 10% 15%, rgba(255, 255, 255, 1), transparent),
         radial-gradient(2px 2px at 20% 35%, rgba(0, 255, 163, 1), transparent),
         radial-gradient(1px 1px at 30% 70%, rgba(255, 255, 255, 0.9), transparent),
@@ -104,7 +104,7 @@
     }
 
     .stars-layer-2 {
-      background-image: 
+      background-image:
         radial-gradient(2px 2px at 5% 45%, rgba(0, 255, 163, 1), transparent),
         radial-gradient(1.5px 1.5px at 15% 75%, rgba(255, 255, 255, 0.95), transparent),
         radial-gradient(2.5px 2.5px at 25% 20%, rgba(56, 189, 248, 1), transparent),
@@ -149,11 +149,27 @@
     }
 
     .brand-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      flex-shrink: 0;
+      background: rgba(13, 25, 32, 0.9);
+      border: 1px solid #1e3540;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
       color: #00ffa3;
       font-weight: 900;
-      font-size: 21px;
+      font-size: 15px;
       font-family: monospace;
-      transition: color 0.4s ease;
+      transition: color 0.4s ease, background 0.4s ease, border-color 0.4s ease;
+    }
+
+    body.day-mode .brand-icon {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
     }
 
     body.day-mode .brand-icon { color: #0f172a; }
@@ -333,85 +349,103 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 10px 20px;
+      padding: 0;
       width: 100%;
-      max-width: 1200px;
+      max-width: none;
       position: relative;
       z-index: 2;
     }
 
-    /* ENLARGED EARTH STAGE (STEP 1) */
+    /* ============================================= */
+    /* EARTH STAGE — bounded frame, only a SEGMENT of
+       the Earth sphere is visible, cropped by the
+       frame edge (matches the wireframe sketch)      */
+    /* ============================================= */
     .earth-stage {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       position: relative;
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      min-height: 0;
       transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* EXPANDED HUGE EARTH CONTAINER WITH GLOW */
-    .earth-wrapper {
+    .earth-frame {
       position: relative;
-      width: clamp(480px, 65vh, 680px);
-      height: clamp(480px, 65vh, 680px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: floatEarth 4s infinite ease-in-out alternate;
-    }
-
-    .earth-wrapper::before {
-      content: '';
-      position: absolute;
-      width: 85%;
-      height: 85%;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0, 255, 163, 0.25) 0%, rgba(56, 189, 248, 0.15) 50%, transparent 70%);
-      filter: blur(30px);
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    @keyframes floatEarth {
-      0% { transform: translate3d(0, 0, 0) rotate(0deg); }
-      100% { transform: translate3d(0, -16px, 0) rotate(2deg); }
-    }
-
-    .earth-img {
       width: 100%;
-      height: 100%;
-      object-fit: contain;
-      filter: drop-shadow(0 0 45px rgba(0, 255, 163, 0.3)) drop-shadow(0 25px 50px rgba(0, 0, 0, 0.95));
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    /* The sphere itself sits mostly BELOW the frame,
+       pushed off the bottom edge — only the top dome
+       (a horizon-line segment) shows through, centered */
+    .earth-sphere {
+      position: absolute;
+      bottom: -108%;
+      left: 50%;
+      width: 130vw;
+      height: clamp(1100px, 170vh, 2000px);
+      transform: translateX(-50%);
       border-radius: 50%;
-      position: relative;
+      animation: floatEarth 5s infinite ease-in-out alternate;
       z-index: 1;
     }
 
-    /* Upload button overlay */
+    .earth-sphere::before {
+      /* soft glow bleeding past the visible arc */
+      content: '';
+      position: absolute;
+      inset: -6%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 45%, rgba(0, 255, 163, 0.1) 0%, rgba(56, 189, 248, 0.05) 45%, transparent 68%);
+      filter: blur(12px);
+      z-index: 0;
+    }
+
+    .earth-sphere svg {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: drop-shadow(0 0 20px rgba(0, 255, 163, 0.12));
+    }
+
+    @keyframes floatEarth {
+      0% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+      100% { transform: translateX(-50%) translateY(-14px) rotate(1.2deg); }
+    }
+
+    /* Upload button overlaid on the visible earth dome, centered */
     .btn-earth-upload {
       position: absolute;
-      top: 50%;
+      top: 70%;
       left: 50%;
       transform: translate(-50%, -50%);
       background: #00ffa3;
       color: #031711;
       font-family: inherit;
-      font-size: 22px;
+      font-size: clamp(16px, 2vw, 22px);
       font-weight: 900;
-      padding: 20px 46px;
+      padding: clamp(14px, 1.8vh, 20px) clamp(28px, 3vw, 46px);
       border: 2px solid #ffffff;
       border-radius: 50px;
       cursor: pointer;
       box-shadow: 0 10px 35px rgba(0, 255, 163, 0.7);
-      backdrop-filter: blur(8px);
       z-index: 10;
       white-space: nowrap;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .btn-earth-upload:hover {
-      transform: translate(-50%, -50%) scale(1.1);
+      transform: translate(-50%, -50%) scale(1.08);
       box-shadow: 0 14px 45px rgba(0, 255, 163, 0.95);
       background: #ffffff;
       color: #0f172a;
@@ -615,10 +649,34 @@
 
   <main class="hero-container">
 
-    <!-- Step 1: Enlarged Earth Section with Embedded Image -->
+    <!-- Step 1: Earth Segment Stage -->
     <div class="earth-stage" id="earthStage">
-      <div class="earth-wrapper">
-        <img src="earth.png" alt="Earth Artwork" class="earth-img">
+      <div class="earth-frame">
+        <div class="earth-sphere">
+          <svg viewBox="0 0 400 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="oceanGrad" cx="38%" cy="38%" r="70%">
+                <stop offset="0%" stop-color="#0f6b6f"/>
+                <stop offset="55%" stop-color="#0a3d52"/>
+                <stop offset="100%" stop-color="#041824"/>
+              </radialGradient>
+              <clipPath id="sphereClip">
+                <circle cx="200" cy="200" r="196"/>
+              </clipPath>
+            </defs>
+            <circle cx="200" cy="200" r="196" fill="url(#oceanGrad)"/>
+            <g clip-path="url(#sphereClip)" fill="#00ffa3" opacity="0.82">
+              <path d="M60 120 Q100 90 150 110 Q190 125 175 165 Q210 175 200 210 Q170 225 140 205 Q95 220 80 180 Q55 165 60 120 Z"/>
+              <path d="M230 70 Q280 55 320 90 Q345 120 310 150 Q330 190 290 205 Q250 195 245 155 Q215 125 230 70 Z"/>
+              <path d="M110 250 Q160 235 195 265 Q210 300 175 320 Q135 335 105 305 Q80 280 110 250 Z"/>
+              <path d="M260 250 Q310 245 330 280 Q325 320 285 325 Q250 310 250 280 Z"/>
+              <ellipse cx="205" cy="60" rx="45" ry="16"/>
+              <ellipse cx="80" cy="330" rx="38" ry="14"/>
+            </g>
+            <circle cx="200" cy="200" r="196" fill="none" stroke="#000000" stroke-opacity="0.25" stroke-width="1"/>
+            <ellipse cx="150" cy="150" rx="120" ry="90" fill="#ffffff" opacity="0.06"/>
+          </svg>
+        </div>
         <button class="btn-earth-upload" onclick="revealUploadBoxes()">Upload Images</button>
       </div>
     </div>
