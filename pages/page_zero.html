@@ -472,6 +472,13 @@
                 </div>
                 <div class="category-tag" id="quote-category">Philosophy</div>
             </div>
+
+            <div id="proceed-container" style="display: none; margin-top: 2rem; width: 100%; justify-content: flex-end;">
+                <button id="btn-enter-console" onclick="event.stopPropagation(); proceedToLanding();" style="display: inline-flex; align-items: center; gap: 0.6rem; background: linear-gradient(135deg, #4f46e5, #818cf8); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.85rem 1.8rem; border-radius: 9999px; font-weight: 700; font-size: 0.95rem; cursor: pointer; box-shadow: 0 0 30px rgba(99, 102, 241, 0.6); transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                    <span>Enter Veritas Console</span>
+                    <span style="font-size: 1.2rem;">→</span>
+                </button>
+            </div>
         </div>
 
         <div class="ambient-hint" id="ambient-hint">
@@ -701,6 +708,10 @@
         }
 
         function nextQuote() {
+            if (currentIndex === QUOTES.length - 1) {
+                proceedToLanding();
+                return;
+            }
             currentIndex = (currentIndex + 1) % QUOTES.length;
             renderCurrentQuote();
         }
@@ -710,12 +721,31 @@
             renderCurrentQuote();
         }
 
+        function proceedToLanding() {
+            playChord(660);
+            showToast("VERITAS CREDENTIALS VERIFIED — INITIALIZING CONSOLE...");
+            const card = document.getElementById('quote-card');
+            if (card) {
+                card.style.transition = 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.92) translateY(-20px)';
+            }
+            document.body.style.transition = 'opacity 0.8s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '0';
+            }, 300);
+            setTimeout(() => {
+                window.location.href = 'landing_page.html';
+            }, 900);
+        }
+
         /* SECTION: CHARACTER TYPEWRITER & BORDER ANIMATION */
         const quoteTextEl = document.getElementById('quote-text');
         const quoteAuthorEl = document.getElementById('quote-author');
         const quoteCategoryEl = document.getElementById('quote-category');
         const quoteCounterEl = document.getElementById('quote-counter');
         const metaContainerEl = document.getElementById('meta-container');
+        const proceedContainerEl = document.getElementById('proceed-container');
 
         function renderCurrentQuote() {
             if (typingTimeoutId) {
@@ -788,6 +818,17 @@
                     quoteAuthorEl.textContent = currentData.author;
                     quoteCategoryEl.textContent = currentData.category;
                     metaContainerEl.classList.add('visible');
+
+                    if (proceedContainerEl) {
+                        if (currentIndex === QUOTES.length - 1) {
+                            proceedContainerEl.style.display = 'flex';
+                            proceedContainerEl.style.opacity = '0';
+                            proceedContainerEl.style.transition = 'opacity 0.6s ease';
+                            setTimeout(() => { proceedContainerEl.style.opacity = '1'; }, 100);
+                        } else {
+                            proceedContainerEl.style.display = 'none';
+                        }
+                    }
                 }
             }
 

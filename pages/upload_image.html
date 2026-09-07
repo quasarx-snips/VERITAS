@@ -708,12 +708,29 @@
       </div>
     </div>
 
-    <!-- Proceed Button -->
-    <button id="proceedBtn" class="btn-proceed" onclick="proceedAnalysis()">Proceed with Analysis</button>
+    <!-- Proceed Button & Quick Sample Option -->
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 10;">
+      <button id="proceedBtn" class="btn-proceed" onclick="proceedAnalysis()">Proceed with Analysis</button>
+      <button id="sampleBtn" class="btn-input-file" style="background: rgba(255,255,255,0.06); border: 1px dashed rgba(255,255,255,0.2); font-size: 11px; padding: 6px 16px; border-radius: 9999px; cursor: pointer; color: #a0aec0; transition: all 0.2s;" onclick="loadSampleImages()">
+        ⚡ Quick Load Sample Pair (Before &amp; After)
+      </button>
+    </div>
+
+    <!-- Feedback Toast -->
+    <div id="uploadToast" style="position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(18, 5, 13, 0.95); border: 1px solid #f43f5e; color: #fff; padding: 12px 24px; border-radius: 9999px; font-size: 13px; font-weight: 600; letter-spacing: 0.05em; box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(244,63,94,0.4); opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 9999; display: flex; align-items: center; gap: 8px;">
+      <span style="color: #f43f5e; font-size: 16px;">⚠️</span>
+      <span id="toastMsg">Please select both images.</span>
+    </div>
 
   </main>
 
+  <script src="veritas_store.js"></script>
   <script>
+    let file1Data = null;
+    let file2Data = null;
+    let file1Name = 'Image 1';
+    let file2Name = 'Image 2';
+
     function setTheme(mode) {
       const dayBtn = document.getElementById('dayBtn');
       const nightBtn = document.getElementById('nightBtn');
@@ -727,6 +744,25 @@
         nightBtn.classList.add('active');
         dayBtn.classList.remove('active');
       }
+      try {
+        localStorage.setItem('veritas_theme', mode);
+        sessionStorage.setItem('veritas_theme', mode);
+      } catch (e) {}
+    }
+
+    function showToast(msg, isError = true) {
+      const toast = document.getElementById('uploadToast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.innerText = msg;
+      toast.style.borderColor = isError ? '#f43f5e' : '#00ffa3';
+      toast.style.boxShadow = isError ? '0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(244,63,94,0.4)' : '0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(0,255,163,0.4)';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      toast.style.opacity = '1';
+
+      setTimeout(() => {
+        toast.style.transform = 'translateX(-50%) translateY(100px)';
+        toast.style.opacity = '0';
+      }, 3200);
     }
 
     function revealUploadBoxes() {
@@ -748,21 +784,126 @@
           img.src = e.target.result;
           img.style.display = 'block';
           document.getElementById(labelId).innerText = file.name;
+
+          if (previewId === 'preview1') {
+            file1Data = e.target.result;
+            file1Name = file.name;
+          } else {
+            file2Data = e.target.result;
+            file2Name = file.name;
+          }
         };
         reader.readAsDataURL(file);
       }
     }
 
-    function proceedAnalysis() {
-      const img1 = document.getElementById('fileInput1').files[0];
-      const img2 = document.getElementById('fileInput2').files[0];
+    async function loadSampleImages() {
+      try {
+        revealUploadBoxes();
+        showToast('Loading VERITAS benchmark sample pair...', false);
 
-      if (!img1 || !img2) {
-        alert("Please upload both Image 1 and Image 2 before proceeding.");
-      } else {
-        alert("Images uploaded successfully! Proceeding with VERITAS Analysis...");
+        const resp1 = await fetch('../samples/sample_before.png');
+        const blob1 = await resp1.blob();
+        const reader1 = new FileReader();
+        reader1.onloadend = () => {
+          file1Data = reader1.result;
+          file1Name = 'sample_before.png';
+          const img1 = document.getElementById('preview1');
+          img1.src = file1Data;
+          img1.style.display = 'block';
+          document.getElementById('label1').innerText = 'sample_before.png (Loaded)';
+        };
+        reader1.readAsDataURL(blob1);
+
+        const resp2 = await fetch('../samples/sample_after.jpg');
+        const blob2 = await resp2.blob();
+        const reader2 = new FileReader();
+        reader2.onloadend = () => {
+          file2Data = reader2.result;
+          file2Name = 'sample_after.jpg';
+          const img2 = document.getElementById('preview2');
+          img2.src = file2Data;
+          img2.style.display = 'block';
+          document.getElementById('label2').innerText = 'sample_after.jpg (Loaded)';
+        };
+        reader2.readAsDataURL(blob2);
+
+        setTimeout(() => {
+          showToast('Sample pair loaded into memory! Click "Proceed with Analysis".', false);
+        }, 600);
+      } catch (err) {
+        console.warn('Sample load error:', err);
+        showToast('Could not auto-fetch sample images; please select files manually.', true);
       }
     }
+
+    async function proceedAnalysis() {
+      // Must upload two images beforehand
+      if (!file1Data || !file2Data) {
+        showToast('Please upload both Image 1 and Image 2 before proceeding.', true);
+        return;
+      }
+
+      const proceedBtn = document.getElementById('proceedBtn');
+      proceedBtn.innerText = '⚡ Caching & Initializing Pipeline...';
+      proceedBtn.style.opacity = '0.7';
+      proceedBtn.style.pointerEvents = 'none';
+
+      try {
+        if (window.VeritasCache) {
+          await window.VeritasCache.savePair(file1Data, file2Data, file1Name, file2Name);
+        } else {
+          sessionStorage.setItem('veritas_active_pair', JSON.stringify({
+            ref_image: file1Data,
+            src_image: file2Data,
+            ref_name: file1Name,
+            src_name: file2Name,
+            timestamp: Date.now()
+          }));
+        }
+
+        showToast('Images securely cached. Opening Analysis Dashboard...', false);
+        setTimeout(() => {
+          window.location.href = 'analysis_page.html';
+        }, 700);
+      } catch (err) {
+        console.error('Failed to save to cache:', err);
+        showToast('Memory save warning. Proceeding with analysis...', false);
+        setTimeout(() => {
+          window.location.href = 'analysis_page.html';
+        }, 800);
+      }
+    }
+
+    // Auto-restore previously cached pair and theme if returning
+    window.addEventListener('DOMContentLoaded', async () => {
+      let savedTheme = 'night';
+      try {
+        savedTheme = localStorage.getItem('veritas_theme') || sessionStorage.getItem('veritas_theme') || 'night';
+      } catch (e) {}
+      setTheme(savedTheme);
+
+      if (window.VeritasCache) {
+        const cached = await window.VeritasCache.getPair();
+        if (cached && cached.ref_image && cached.src_image) {
+          file1Data = cached.ref_image;
+          file2Data = cached.src_image;
+          file1Name = cached.ref_name || 'Cached Image 1';
+          file2Name = cached.src_name || 'Cached Image 2';
+
+          revealUploadBoxes();
+          const img1 = document.getElementById('preview1');
+          img1.src = file1Data;
+          img1.style.display = 'block';
+          document.getElementById('label1').innerText = file1Name;
+
+          const img2 = document.getElementById('preview2');
+          img2.src = file2Data;
+          img2.style.display = 'block';
+          document.getElementById('label2').innerText = file2Name;
+        }
+      }
+    });
   </script>
 </body>
 </html>

@@ -1079,6 +1079,10 @@
         nightBtn.classList.add('active');
         dayBtn.classList.remove('active');
       }
+      try {
+        localStorage.setItem('veritas_theme', mode);
+        sessionStorage.setItem('veritas_theme', mode);
+      } catch (e) {}
     }
 
     function setConsoleCounsel(mode) {
@@ -1088,24 +1092,31 @@
       if (mode === 'console') {
         consoleBtn.classList.add('active');
         counselBtn.classList.remove('active');
+        try { sessionStorage.setItem('veritas_mode', 'console'); } catch (e) {}
       } else {
         counselBtn.classList.add('active');
         consoleBtn.classList.remove('active');
+        try { sessionStorage.setItem('veritas_mode', 'counsel'); } catch (e) {}
       }
     }
     
     function proceedToUpload() {
       if (document.body.classList.contains('transitioning')) return;
       
+      const isCounsel = document.getElementById('counselBtn')?.classList.contains('active');
+      const targetUrl = isCounsel ? 'counsel_agent.html' : 'upload_image.html';
+
       const earth = document.querySelector('.earth-graphic');
-      const earthBounds = earth.getBoundingClientRect();
-      earth.style.setProperty('--earth-dx', `${(window.innerWidth / 2) - (earthBounds.left + earthBounds.width / 2)}px`);
-      earth.style.setProperty('--earth-dy', `${(window.innerHeight / 2) - (earthBounds.top + earthBounds.height / 2)}px`);
+      if (earth) {
+        const earthBounds = earth.getBoundingClientRect();
+        earth.style.setProperty('--earth-dx', `${(window.innerWidth / 2) - (earthBounds.left + earthBounds.width / 2)}px`);
+        earth.style.setProperty('--earth-dy', `${(window.innerHeight / 2) - (earthBounds.top + earthBounds.height / 2)}px`);
+      }
       document.body.classList.add('transitioning');
 
       window.setTimeout(() => {
-        window.location.href = 'upload_image.html';
-      }, 1600);
+        window.location.href = targetUrl;
+      }, 1400);
     }
 
     const laserLine = document.getElementById('laser-line');
@@ -1126,6 +1137,11 @@
     window.addEventListener('mousemove', updateLaser, { passive: true });
     
     window.addEventListener('load', (e) => {
+      let savedTheme = 'night';
+      try {
+        savedTheme = localStorage.getItem('veritas_theme') || sessionStorage.getItem('veritas_theme') || 'night';
+      } catch (err) {}
+      setTheme(savedTheme);
       updateLaser({ clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 });
     });
   </script>

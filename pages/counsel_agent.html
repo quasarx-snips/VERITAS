@@ -12,6 +12,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Veritas Cache Engine -->
+  <script src="veritas_store.js"></script>
   <style>
     /* Midnight Sakura / Dark Magenta design tokens */
     :root {
@@ -1107,10 +1109,45 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      let savedTheme = 'night';
+      try {
+        savedTheme = localStorage.getItem('veritas_theme') || sessionStorage.getItem('veritas_theme') || 'night';
+      } catch (e) {}
+      if (savedTheme === 'night') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+
       setRandomHeader();
       renderRecentChats();
       renderActiveChat();
       refreshIcons();
+
+      // Auto-attach cached images from Flow 1 if present
+      if (window.VeritasCache) {
+        window.VeritasCache.getPair().then(pair => {
+          if (pair && pair.ref_image && pair.src_image) {
+            referenceImage = pair.ref_image;
+            sourceImage = pair.src_image;
+            updateAttachmentUI();
+
+            const notifyBanner = document.createElement('div');
+            notifyBanner.className = 'fixed top-20 right-6 z-50 p-3.5 rounded-xl glass-card border border-rose-400/40 text-rose-200 text-xs shadow-2xl flex items-center gap-3 animate-fade-in backdrop-blur-xl bg-black/80';
+            notifyBanner.innerHTML = `
+              <i data-lucide="sparkles" class="w-4 h-4 text-rose-300 shrink-0"></i>
+              <div>
+                <span class="font-bold text-white block">Verification Images Attached</span>
+                <span class="opacity-80">Images from Flow 1 Analysis loaded into chat memory.</span>
+              </div>
+              <button onclick="this.parentElement.remove()" class="p-1 hover:bg-white/10 rounded ml-2 text-white/60 hover:text-white">✕</button>
+            `;
+            document.body.appendChild(notifyBanner);
+            refreshIcons();
+            setTimeout(() => { if (notifyBanner.parentElement) notifyBanner.remove(); }, 6000);
+          }
+        });
+      }
     });
   </script>
 </body>
