@@ -29,7 +29,7 @@ class GeminiSettings:
     temperature: float = 0.2
     max_tokens: int = 350
     tts_model: str = "gemini-2.5-flash-preview-tts"
-    tts_voice: str = "Kore"
+    tts_voice: str = "Puck"
     tts_timeout_seconds: float = 60.0
 
     @property

@@ -74,3 +74,14 @@ def test_api_opt_in_runtime_does_not_change_deterministic_fields():
     assert response["gate"]["action"] == "HUMAN_REVIEW"
     assert response["explanation"]["source"] == "deterministic"
     assert response["tts"]["enabled"] is True
+
+
+def test_gemini_client_chat():
+    settings = GeminiSettings(api_key="test-key", model="gemini-2.5-flash-lite")
+    with patch("veritas.llm.gemini_client.urlopen") as open_url:
+        response = open_url.return_value.__enter__.return_value
+        response.read.return_value = json.dumps({"candidates": [{"content": {"parts": [{"text": "Chat answer."}]}}]}).encode()
+        result = GeminiClient(settings).chat("system instruction", [{"role": "user", "content": "hello"}])
+    assert result.success is True
+    assert result.text == "Chat answer."
+
