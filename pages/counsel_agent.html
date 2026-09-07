@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -41,6 +41,7 @@
       --ui-text-accent: var(--text-accent);
       --ui-heading: var(--text-primary);
       --ui-on-accent: var(--bg-canvas);
+      --ui-letter-hover: var(--accent-hover);
     }
 
     /* Keep typography metrics identical in both color themes. */
@@ -92,10 +93,35 @@
       font-synthesis: none;
       text-rendering: geometricPrecision;
     }
+    .brand-word {
+      display: inline-flex;
+      margin-right: 0.18em;
+      font-size: 1.2em;
+      line-height: 0.9;
+    }
+    .brand-letter {
+      display: inline-block;
+      -webkit-text-stroke: 0 solid transparent;
+      transition: color 750ms ease-out, -webkit-text-fill-color 750ms ease-out, -webkit-text-stroke-color 750ms ease-out, -webkit-text-stroke-width 750ms ease-out;
+    }
+    .brand-letter:hover {
+      color: var(--ui-letter-hover);
+      -webkit-text-fill-color: var(--ui-letter-hover);
+    }
+    .dark .brand-letter:hover {
+      color: var(--bg-canvas);
+      -webkit-text-fill-color: var(--bg-canvas);
+      -webkit-text-stroke: 1.5px var(--accent-primary);
+    }
     html:not(.dark) .brand-title {
       background-image: none;
       color: var(--ui-heading);
       -webkit-text-fill-color: currentColor;
+    }
+    html:not(.dark) .brand-letter:hover {
+      color: #f7e4eb;
+      -webkit-text-fill-color: #f7e4eb;
+      -webkit-text-stroke: 1.5px #882449;
     }
     .brand-subtitle {
       color: var(--ui-text-secondary);
@@ -127,6 +153,7 @@
       --ui-text-accent: #882449;
       --ui-heading: #5b1029;
       --ui-on-accent: #ffffff;
+      --ui-letter-hover: #882449;
     }
     html:not(.dark) body {
       background: linear-gradient(135deg, #fdf6f8 0%, #f7e4eb 50%, #f1d2dd 100%);
@@ -259,8 +286,8 @@
           id="theme-toggle-btn"
           class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm hover:bg-rose-500/10 transition-colors font-medium"
         >
-          <i data-lucide="sun" id="theme-icon" class="w-4 h-4 accent-text"></i>
-          <span class="sidebar-label hidden" id="theme-text">Light mode</span>
+          <i data-lucide="moon" id="theme-icon" class="w-4 h-4 accent-text"></i>
+          <span class="sidebar-label hidden" id="theme-text">Dark mode</span>
         </button>
         <button class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm hover:bg-rose-500/10 transition-colors font-medium">
           <i data-lucide="help-circle" class="w-4 h-4"></i>
@@ -280,9 +307,9 @@
       <div id="chat-viewport" class="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-6">
         
         <!-- Welcome Screen (Default Empty State) -->
-        <div id="welcome-screen" class="max-w-6xl mx-auto flex flex-col items-start justify-center min-h-[70vh] space-y-8 py-6">
+        <div id="welcome-screen" class="max-w-6xl mx-auto flex flex-col items-start justify-end min-h-[70vh] space-y-8 py-6">
           <div class="space-y-2 w-full">
-            <h1 id="random-title" class="brand-title text-4xl md:text-5xl font-extrabold tracking-tight pb-2 leading-tight inline-block drop-shadow-sm">
+            <h1 id="random-title" class="brand-title text-5xl md:text-6xl font-extrabold tracking-tight pb-2 leading-tight inline-block drop-shadow-sm">
               <!-- Dynamic randomized title -->
             </h1>
             <h2 id="random-subtitle" class="brand-subtitle text-xl md:text-2xl font-bold">
@@ -470,7 +497,7 @@
     let activeChatId = '1';
     let referenceImage = null; 
     let sourceImage = null;    
-    let isDarkMode = true;
+    let isDarkMode = false;
     let sidebarExpanded = false;
     let isRecording = false;
     let recognition = null;
@@ -550,7 +577,27 @@
       const greetingIndex = Math.floor(Math.random() * GREETINGS.length);
       
       if (randomTitleEl) {
-        randomTitleEl.textContent = randomTitles[titleIndex];
+        const title = randomTitles[titleIndex];
+        randomTitleEl.replaceChildren();
+
+        if (title.startsWith('VERITAS')) {
+          const word = document.createElement('span');
+          word.className = 'brand-word';
+          word.setAttribute('aria-label', 'VERITAS');
+
+          [...'VERITAS'].forEach(letter => {
+            const character = document.createElement('span');
+            character.className = 'brand-letter';
+            character.setAttribute('aria-hidden', 'true');
+            character.textContent = letter;
+            word.appendChild(character);
+          });
+
+          randomTitleEl.appendChild(word);
+          randomTitleEl.append(title.slice('VERITAS'.length));
+        } else {
+          randomTitleEl.textContent = title;
+        }
       }
       if (randomSubtitleEl) {
         randomSubtitleEl.textContent = GREETINGS[greetingIndex];
