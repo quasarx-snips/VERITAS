@@ -131,10 +131,9 @@ def format_metrics_report(result: VeritasPipelineResult, before_path: str, after
 
 
 def generate_spoken_narration(result: VeritasPipelineResult, explanation_text: str, client: GeminiClient | None = None) -> str:
-    """Generate an articulate, engaging, conversational narration specifically crafted for audio playback.
+    """Generate an articulate, witty Gen-Z style audio narration explaining the results with natural humor.
 
-    The tone is that of a friendly, knowledgeable engineer who makes technical concepts easy to grasp.
-    Contains zero markdown artifacts (no asterisks, bullet marks, headers) so it sounds completely natural.
+    Authentic, modern, punchy delivery without forced slang. Zero markdown formatting.
     """
     client = client or GeminiClient()
     if not client.configured:
@@ -143,21 +142,24 @@ def generate_spoken_narration(result: VeritasPipelineResult, explanation_text: s
 
     evidence_dict = result.explanation_payload.to_dict()
     prompt = (
-        "You are an engaging, friendly computer vision engineer and educator speaking to a teammate "
-        "to help them intuitively understand this verification result.\n\n"
-        "Guidelines for spoken audio:\n"
-        "1. Persona: You are a sharp, articulate, relatable guy who explains technical stuff simply and clearly.\n"
-        "2. Format: Output ONLY natural spoken prose. NEVER use markdown, bullet points, asterisks, hashes, or numbered lists.\n"
-        "3. Narrative flow:\n"
-        "   - Give a warm, natural opener with the verdict and what the gate action means in plain terms.\n"
-        "   - Walk through the detectors (SIFT, ORB, AKAZE) and explain their agreement.\n"
-        "   - Explain the inlier ratio and geometric alignment intuitively.\n"
-        "   - Clarify the spatial breakdown (which regions matched well and which specific cells didn't).\n"
-        "   - Finish with a clear, practical recommendation for what to do next.\n"
-        "4. Length: 100 to 140 words (around 45 to 60 seconds spoken).\n\n"
+        "You are an articulate, sharp Gen-Z computer vision engineer explaining this verification result "
+        "to a colleague with witty, relatable humor.\n\n"
+        "CRITICAL STYLE RULES:\n"
+        "1. DO NOT FAKE IT: Absolutely avoid cringe forced buzzwords (never say skibidi, gyatt, rizz, etc.). "
+        "Instead, speak like an authentic, clever, modern tech engineer (use natural, witty phrasing like "
+        "'let\\'s unpack this', 'translation:', 'passed the vibe check', 'completely ghosted', 'plot twist', "
+        "'honestly solid', 'keep it 100', 'please don\\'t just blindly YOLO this').\n"
+        "2. FORMAT: Output ONLY plain spoken prose. ZERO markdown, no asterisks, no bullet points, no headers.\n"
+        "3. PACING & LENGTH: Punchy, fast, and engaging. Around 100 to 125 words.\n"
+        "4. FLOW:\n"
+        "   - Open with the verdict and safety gate action with a funny translation of what that means for downstream systems.\n"
+        "   - Give props to the detectors (SIFT, ORB, AKAZE) for actually agreeing on the quorum.\n"
+        "   - Call out the inlier ratio (~78%) and reprojection error.\n"
+        "   - Poke fun at the spatial grid (e.g. 12 cells passed the vibe check, but column zero completely ghosted).\n"
+        "   - Wrap up with what the team should actually do next.\n\n"
         f"Verification Evidence:\n{json.dumps(evidence_dict, default=str)}"
     )
-    res = client.complete("You are an expert audio narrator and computer vision educator.", prompt)
+    res = client.complete("You are a witty, authentic Gen-Z computer vision engineer explaining verification results.", prompt)
     if res.success and res.text:
         clean_spoken = res.text.replace("*", "").replace("#", "").replace("`", "").strip()
         return clean_spoken
@@ -241,6 +243,7 @@ def main() -> int:
                         help="Directory for audio synthesis outputs (default: outputs/audio)")
     parser.add_argument("--no-audio", action="store_true", help="Disable audio synthesis")
     parser.add_argument("--no-chat", action="store_true", help="Disable interactive CLI chat loop")
+    parser.add_argument("--speed", type=float, default=1.25, help="Audio playback speed multiplier (default: 1.25)")
     args = parser.parse_args()
 
     before_path = Path(args.before)
@@ -266,12 +269,12 @@ def main() -> int:
     # 2. Audio Synthesis with Conversational Voice Persona
     audio_result = None
     if not args.no_audio:
-        print("Preparing spoken audio narration...")
+        print("Preparing spoken Gen-Z audio narration...")
         spoken_script = generate_spoken_narration(result, explanation["text"])
-        print("Synthesizing audio with Puck voice...")
-        audio_result = synthesize(spoken_script, output_dir=args.audio_dir)
+        print(f"Synthesizing audio (Puck voice at {args.speed}x speed)...")
+        audio_result = synthesize(spoken_script, output_dir=args.audio_dir, speed=args.speed)
         if audio_result.get("success"):
-            print(f"  Audio generated: {audio_result.get('audio_path')}")
+            print(f"  Audio generated: {audio_result.get('audio_path')} (Speed: {args.speed}x)")
         else:
             print(f"  Audio note: {audio_result.get('error')}")
 

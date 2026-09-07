@@ -31,6 +31,7 @@ class GeminiSettings:
     tts_model: str = "gemini-2.5-flash-preview-tts"
     tts_voice: str = "Puck"
     tts_timeout_seconds: float = 60.0
+    tts_speed: float = 1.25
 
     @property
     def configured(self) -> bool:
@@ -48,4 +49,5 @@ class GeminiSettings:
             tts_model=os.getenv("VERITAS_GEMINI_TTS_MODEL", cls.tts_model),
             tts_voice=os.getenv("VERITAS_GEMINI_TTS_VOICE", cls.tts_voice),
             tts_timeout_seconds=float(os.getenv("VERITAS_TTS_TIMEOUT_SECONDS", "60")),
+            tts_speed=float(os.getenv("VERITAS_TTS_SPEED", "1.25")),
         )
