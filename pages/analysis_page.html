@@ -1167,6 +1167,29 @@
       if (window.lucide) window.lucide.createIcons();
     }
 
+    // Render high-visibility feature keypoint landmark dots (visible without zooming)
+    function drawKeypointDot(ctx, x, y, color, radius) {
+      ctx.save();
+      // Outer high-contrast shadow ring
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.beginPath();
+      ctx.arc(x, y, radius + 1.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Solid vibrant color dot
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Bright white inner core highlight
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(2.0, radius * 0.35), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     // High-performance Feature Correspondence Visualizer (HTML5 Canvas)
     // Supports 'stacked' (Images Down) and 'side' (Side-by-Side)
     // Includes crisp white space channel between the two images in the output
@@ -1191,11 +1214,11 @@
         const gap = 46;
 
         // Colors specified by user:
-        // Green: Inlier
-        // Blue: Outlier
-        const inlierLine = 'rgba(76, 217, 44, 0.88)';
+        // Green: Inlier (Bold bright green)
+        // Blue: Outlier (Bold electric blue)
+        const inlierLine = 'rgba(76, 217, 44, 0.95)';
         const inlierDot = '#4cd92c';
-        const outlierLine = 'rgba(37, 99, 235, 0.95)';
+        const outlierLine = 'rgba(37, 99, 235, 0.98)';
         const outlierDot = '#2563eb';
 
         const totalInliers = metrics.verifiedInliers || 515;
@@ -1230,9 +1253,9 @@
           ctx.strokeRect(0, 0, W, hA);
           ctx.strokeRect(0, hA + gap, W, hB);
 
-          // A. Draw INLIERS (Green lines connecting matching features down from top to bottom)
+          // A. Draw INLIERS (Thick Green lines connecting matching features down from top to bottom)
           if (matchFilter === 'all' || matchFilter === 'inliers') {
-            ctx.lineWidth = 1.35;
+            ctx.lineWidth = 2.6;
             ctx.strokeStyle = inlierLine;
 
             const cols = 20;
@@ -1274,21 +1297,15 @@
               ctx.lineTo(x2, bottomCanvasY);
               ctx.stroke();
 
-              // Feature keypoint dots
-              ctx.fillStyle = inlierDot;
-              ctx.beginPath();
-              ctx.arc(x1, y1, 2.5, 0, Math.PI * 2);
-              ctx.fill();
-
-              ctx.beginPath();
-              ctx.arc(x2, bottomCanvasY, 2.5, 0, Math.PI * 2);
-              ctx.fill();
+              // Large, prominent feature keypoint dots (visible without zooming)
+              drawKeypointDot(ctx, x1, y1, inlierDot, 6.5);
+              drawKeypointDot(ctx, x2, bottomCanvasY, inlierDot, 6.5);
             }
           }
 
-          // B. Draw OUTLIERS (Blue lines crossing down to mismatched locations)
+          // B. Draw OUTLIERS (Thick Blue lines crossing down to mismatched locations)
           if (matchFilter === 'all' || matchFilter === 'outliers') {
-            ctx.lineWidth = 1.7;
+            ctx.lineWidth = 3.2;
             ctx.strokeStyle = outlierLine;
 
             for (let j = 0; j < displayOutliers; j++) {
@@ -1315,14 +1332,9 @@
               ctx.lineTo(x2, bottomCanvasY);
               ctx.stroke();
 
-              ctx.fillStyle = outlierDot;
-              ctx.beginPath();
-              ctx.arc(x1, y1, 3.2, 0, Math.PI * 2);
-              ctx.fill();
-
-              ctx.beginPath();
-              ctx.arc(x2, bottomCanvasY, 3.2, 0, Math.PI * 2);
-              ctx.fill();
+              // Large prominent outlier dots in blue
+              drawKeypointDot(ctx, x1, y1, outlierDot, 7.5);
+              drawKeypointDot(ctx, x2, bottomCanvasY, outlierDot, 7.5);
             }
           }
 
@@ -1353,9 +1365,9 @@
           ctx.strokeRect(0, 0, wA, totalH);
           ctx.strokeRect(wA + gap, 0, wB, totalH);
 
-          // A. Draw INLIERS (Green lines connecting matching features across the white space)
+          // A. Draw INLIERS (Thick Green lines connecting matching features across the white space)
           if (matchFilter === 'all' || matchFilter === 'inliers') {
-            ctx.lineWidth = 1.25;
+            ctx.lineWidth = 2.6;
             ctx.strokeStyle = inlierLine;
 
             const cols = 20;
@@ -1397,20 +1409,14 @@
               ctx.lineTo(rightCanvasX, y2);
               ctx.stroke();
 
-              ctx.fillStyle = inlierDot;
-              ctx.beginPath();
-              ctx.arc(x1, y1, 2.4, 0, Math.PI * 2);
-              ctx.fill();
-
-              ctx.beginPath();
-              ctx.arc(rightCanvasX, y2, 2.4, 0, Math.PI * 2);
-              ctx.fill();
+              drawKeypointDot(ctx, x1, y1, inlierDot, 6.5);
+              drawKeypointDot(ctx, rightCanvasX, y2, inlierDot, 6.5);
             }
           }
 
-          // B. Draw OUTLIERS (Blue lines crossing the white space to mismatched locations)
+          // B. Draw OUTLIERS (Thick Blue lines crossing the white space to mismatched locations)
           if (matchFilter === 'all' || matchFilter === 'outliers') {
-            ctx.lineWidth = 1.6;
+            ctx.lineWidth = 3.2;
             ctx.strokeStyle = outlierLine;
 
             for (let j = 0; j < displayOutliers; j++) {
@@ -1436,14 +1442,8 @@
               ctx.lineTo(rightCanvasX, y2);
               ctx.stroke();
 
-              ctx.fillStyle = outlierDot;
-              ctx.beginPath();
-              ctx.arc(x1, y1, 3.0, 0, Math.PI * 2);
-              ctx.fill();
-
-              ctx.beginPath();
-              ctx.arc(rightCanvasX, y2, 3.0, 0, Math.PI * 2);
-              ctx.fill();
+              drawKeypointDot(ctx, x1, y1, outlierDot, 7.5);
+              drawKeypointDot(ctx, rightCanvasX, y2, outlierDot, 7.5);
             }
           }
         }
