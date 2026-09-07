@@ -144,6 +144,28 @@
     #send-btn:not([disabled]) {
       color: var(--ui-on-accent);
     }
+    .session-meta {
+      color: var(--ui-text-muted);
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .status-badge::before {
+      content: '';
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 9999px;
+      background: currentColor;
+    }
+    .status-pending { color: #b86882; }
+    .status-verified { color: #4f9d78; }
+    .status-flagged { color: #c75b70; }
 
     /* Light Mode - Enhanced Contrast & High-Legibility Borders */
     html:not(.dark) {
@@ -493,7 +515,7 @@
       return `Session #${String(num).padStart(3, '0')}-VERITAS`;
     }
 
-    let chats = [{ id: '1', title: getSessionTitle(sessionCounter), messages: [] }];
+    let chats = [{ id: '1', title: getSessionTitle(sessionCounter), messages: [], status: 'pending', createdAt: Date.now() }];
     let activeChatId = '1';
     let referenceImage = null; 
     let sourceImage = null;    
@@ -753,9 +775,16 @@
         }`;
 
         chatItem.innerHTML = `
-          <div class="flex items-center gap-3 truncate">
+          <div class="flex items-center gap-3 min-w-0">
             <i data-lucide="shield" class="w-4 h-4 shrink-0"></i>
-            <span class="truncate font-mono">${escapeHTML(chat.title)}</span>
+            <div class="min-w-0 flex-1">
+              <span class="block truncate font-mono">${escapeHTML(chat.title)}</span>
+              <div class="session-meta flex items-center gap-2 mt-0.5">
+                <span class="status-badge status-${chat.status || 'pending'}">${chat.status || 'pending'}</span>
+                <span aria-hidden="true">·</span>
+                <span>${getRelativeTime(chat.createdAt)}</span>
+              </div>
+            </div>
           </div>
           <button data-id="${chat.id}" class="delete-chat-btn opacity-0 group-hover:opacity-100 hover:text-rose-600 dark:hover:text-rose-400 p-1 rounded transition-opacity">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -774,12 +803,22 @@
       refreshIcons();
     }
 
+    function getRelativeTime(timestamp) {
+      const elapsedSeconds = Math.max(0, Math.floor((Date.now() - (timestamp || Date.now())) / 1000));
+      if (elapsedSeconds < 60) return 'just now';
+      const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+      if (elapsedMinutes < 60) return `${elapsedMinutes}m ago`;
+      const elapsedHours = Math.floor(elapsedMinutes / 60);
+      if (elapsedHours < 24) return `${elapsedHours}h ago`;
+      return `${Math.floor(elapsedHours / 24)}d ago`;
+    }
+
     newChatBtn.addEventListener('click', () => createNewChat());
 
     function createNewChat() {
       sessionCounter++;
       const newId = Date.now().toString();
-      const newChat = { id: newId, title: getSessionTitle(sessionCounter), messages: [] };
+      const newChat = { id: newId, title: getSessionTitle(sessionCounter), messages: [], status: 'pending', createdAt: Date.now() };
       chats.unshift(newChat);
       activeChatId = newId;
       setRandomHeader();
@@ -931,6 +970,8 @@
         srcImg: currentSrc
       };
       activeChat.messages.push(userMessage);
+      activeChat.status = 'pending';
+      renderRecentChats();
 
       referenceImage = null;
       sourceImage = null;
@@ -952,14 +993,17 @@
           sender: 'gemini',
           text: responseText
         });
+        activeChat.status = /\b(block(?:ed)?|flag(?:ged)?|fail(?:ed)?|reject(?:ed)?)\b/i.test(responseText) ? 'flagged' : 'verified';
       } catch (err) {
         activeChat.messages.push({
           id: (Date.now() + 1).toString(),
           sender: 'gemini',
           text: "System Error: Failed to complete pipeline execution. Please re-examine input media or connectivity."
         });
+        activeChat.status = 'flagged';
       } finally {
         loadingIndicator.classList.add('hidden');
+        renderRecentChats();
         renderActiveChat();
       }
     }
