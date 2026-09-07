@@ -148,6 +148,30 @@
     #send-btn:not([disabled]) {
       color: var(--ui-on-accent);
     }
+    #mic-btn {
+      color: #f3a6c0 !important;
+    }
+    html:not(.dark) #mic-btn {
+      color: #882449 !important;
+    }
+    #sidebar.w-16 .sidebar-topbar {
+      justify-content: center;
+      padding-left: 0;
+      padding-right: 0;
+    }
+    #sidebar.w-16 #new-chat-btn {
+      justify-content: center;
+      padding-left: 0;
+      padding-right: 0;
+    }
+    #sidebar {
+      overflow: hidden;
+      will-change: width;
+      transition: width 520ms cubic-bezier(0.22, 1, 0.36, 1), padding 520ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #sidebar .sidebar-label {
+      transition: opacity 180ms ease-out, transform 180ms ease-out;
+    }
     .session-meta {
       color: var(--ui-text-muted);
     }
@@ -284,11 +308,11 @@
     <!-- SIDEBAR -->
     <aside
       id="sidebar"
-      class="w-16 flex flex-col justify-between p-3 transition-all duration-300 ease-in-out border-r shrink-0 z-20 glass-card"
+      class="w-16 flex flex-col justify-between p-3 border-r shrink-0 z-20 glass-card"
     >
       <!-- Top Section -->
       <div class="flex flex-col gap-4">
-        <div class="flex items-center justify-between px-2">
+        <div class="sidebar-topbar flex items-center justify-between px-2">
           <button
             id="toggle-sidebar-btn"
             class="p-2 rounded-full hover:bg-rose-500/10 transition-colors border border-transparent dark:border-transparent dark:hover:border-rose-500/20 hover:border-rose-900/20"
@@ -540,6 +564,7 @@
     let sourceImage = null;    
     let isDarkMode = false;
     let sidebarExpanded = false;
+    let sidebarLabelTimer = null;
     let isRecording = false;
     let recognition = null;
 
@@ -671,14 +696,38 @@
 
     toggleSidebarBtn.addEventListener('click', () => {
       sidebarExpanded = !sidebarExpanded;
+      const sidebarLabels = document.querySelectorAll('.sidebar-label');
+      window.clearTimeout(sidebarLabelTimer);
+
       if (sidebarExpanded) {
         sidebar.classList.remove('w-16');
         sidebar.classList.add('w-72');
-        document.querySelectorAll('.sidebar-label').forEach(el => el.classList.remove('hidden'));
+        sidebarLabels.forEach(el => {
+          el.classList.add('hidden');
+          el.classList.add('opacity-0', 'translate-x-1');
+        });
+        sidebarLabelTimer = window.setTimeout(() => {
+          if (sidebarExpanded) {
+            sidebarLabels.forEach(el => el.classList.remove('hidden'));
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                sidebarLabels.forEach(el => el.classList.remove('opacity-0', 'translate-x-1'));
+              });
+            });
+          }
+        }, 260);
       } else {
-        sidebar.classList.remove('w-72');
-        sidebar.classList.add('w-16');
-        document.querySelectorAll('.sidebar-label').forEach(el => el.classList.add('hidden'));
+        sidebarLabels.forEach(el => {
+          el.classList.remove('hidden');
+          el.classList.add('opacity-0', 'translate-x-1');
+        });
+        sidebarLabelTimer = window.setTimeout(() => {
+          if (!sidebarExpanded) {
+            sidebarLabels.forEach(el => el.classList.add('hidden'));
+            sidebar.classList.remove('w-72');
+            sidebar.classList.add('w-16');
+          }
+        }, 180);
       }
     });
 
