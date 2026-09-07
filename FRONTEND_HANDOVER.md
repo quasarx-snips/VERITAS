@@ -1,6 +1,6 @@
 # VERITAS — Frontend Developer Handover & Integration Guide
 
-Welcome! This package is the clean, stripped-down backend distribution of **VERITAS** (Verification of Evidence & Residual Inliers for Trustworthy Alignment Safety). 
+Welcome! This package is the clean, stripped-down backend distribution of **VERITAS** (Verifiable Evidence Reasoning with Independent Topological Alignment Systems). 
 
 All heavy test outputs, bulky training datasets, and unit test suites have been removed. This package contains only the **production core backend engine**, the **REST API server**, and lightweight sample images for immediate testing.
 
