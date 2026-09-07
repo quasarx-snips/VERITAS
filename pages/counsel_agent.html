@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VERITAS Platform UI</title>
   <!-- Tailwind CSS CDN -->
+  <script>
+    window.tailwind = window.tailwind || {};
+    window.tailwind.config = { darkMode: 'class' };
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -198,6 +202,21 @@
     html:not(.dark) .accent-bg {
       background-color: #882449;
       color: #ffffff;
+    }
+    html:not(.dark) #prompt-input {
+      color: #240812 !important;
+      -webkit-text-fill-color: #240812 !important;
+      caret-color: #882449;
+      opacity: 1 !important;
+    }
+    html:not(.dark) #prompt-bar {
+      background-color: rgba(255, 250, 252, 0.98) !important;
+      border-color: rgba(136, 36, 73, 0.45) !important;
+    }
+    html:not(.dark) #prompt-input::placeholder {
+      color: #6f314b !important;
+      -webkit-text-fill-color: #6f314b !important;
+      opacity: 1;
     }
 
     /* Custom Input Bar & Attachment Boxes */
@@ -449,7 +468,7 @@
           </div>
 
           <!-- INPUT TEXT BAR WITH MIC AND SUBMIT BUTTON -->
-          <div class="flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-rose-900/40 dark:border-rose-500/30 bg-white/90 dark:bg-[#1f0b13]/80 backdrop-blur-md shadow-xl focus-within:border-[#882449] dark:focus-within:border-[#f3a6c0] transition-all">
+          <div id="prompt-bar" class="flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-rose-900/40 dark:border-rose-500/30 bg-white/90 dark:bg-[#1f0b13]/80 backdrop-blur-md shadow-xl focus-within:border-[#882449] dark:focus-within:border-[#f3a6c0] transition-all">
             <!-- Textarea -->
             <textarea
               id="prompt-input"
