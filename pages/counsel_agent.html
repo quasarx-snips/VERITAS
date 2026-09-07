@@ -1670,8 +1670,23 @@
       const activeChat = chats.find(c => c.id === activeChatId);
       if (!activeChat) return;
 
-      const currentRef = referenceImage;
-      const currentSrc = sourceImage;
+      let currentRef = referenceImage;
+      let currentSrc = sourceImage;
+
+      // If the message asks to run/verify/analyze but no new images are attached,
+      // reuse the most recent full-resolution pair from this session so the
+      // backend engines can run independently of any previous results.
+      if (text && (!currentRef || !currentSrc) &&
+          /\b(verify|verification|analy[sz]e|analy[sz]is|check|compare|authenticate|geolocate|validate|run)\b/i.test(text)) {
+        const prevWithPair = [...activeChat.messages].reverse().find(
+          m => m.sender === 'user' && m.refImg && m.srcImg &&
+               m.refImg !== '[cached_image]' && m.srcImg !== '[cached_image]'
+        );
+        if (prevWithPair) {
+          currentRef = prevWithPair.refImg;
+          currentSrc = prevWithPair.srcImg;
+        }
+      }
 
       const userMessage = {
         id: Date.now().toString(),
