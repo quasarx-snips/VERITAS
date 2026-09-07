@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+  
   <style>
     * {
       box-sizing: border-box;
@@ -20,24 +21,34 @@
       max-width: 100vw;
       max-height: 100vh;
       overflow: hidden;
-      background-color: #070d10;
-      color: #ffffff;
       font-family: 'Plus Jakarta Sans', sans-serif;
-      transition: background 0.6s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s ease;
     }
 
     /* NIGHT THEME DEFAULT BACKGROUND */
     body {
+      background-color: #070d10;
       background-image: radial-gradient(circle at 50% 40%, #163a48 0%, #0a1c24 45%, #030608 100%);
+      color: #ffffff;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
       position: relative;
+      /* Only transition colors on body to avoid jank. Gradients are handled by overlay. */
+      transition: color 0.6s ease, background-color 0.6s ease;
     }
 
-    /* UPDATED DAYLIGHT COLOR GRADIENT */
     body.day-mode {
+      color: #0f172a;
+    }
+
+    /* Smooth Day Mode Gradient Overlay */
+    .day-bg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background-color: #52bcf8;
       background-image: linear-gradient(
         180deg, 
@@ -48,7 +59,15 @@
         #fff59d 78%, 
         #ffeb3b 100%
       );
-      color: #0f172a;
+      opacity: 0;
+      z-index: 0; /* Behind everything */
+      pointer-events: none;
+      transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: opacity;
+    }
+
+    body.day-mode .day-bg-overlay {
+      opacity: 1;
     }
 
     .stars-layer, .stars-layer-2 {
@@ -58,8 +77,10 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 0;
-      transition: opacity 0.5s ease;
+      z-index: 1;
+      transition: opacity 0.6s ease;
+      /* GPU Acceleration for scale/opacity animations */
+      will-change: opacity, transform; 
     }
 
     body.day-mode .stars-layer,
@@ -81,7 +102,7 @@
         radial-gradient(2px 2px at 80% 40%, rgba(0, 255, 163, 0.9), transparent),
         radial-gradient(2px 2px at 85% 18%, rgba(255, 255, 255, 1), transparent),
         radial-gradient(1.5px 1.5px at 92% 55%, rgba(255, 255, 255, 0.9), transparent);
-      animation: shimmer 1.8s infinite alternate ease-in-out;
+      animation: shimmer 2.4s infinite alternate ease-in-out;
     }
 
     .stars-layer-2 {
@@ -97,19 +118,20 @@
         radial-gradient(2.5px 2.5px at 82% 70%, rgba(0, 255, 163, 1), transparent),
         radial-gradient(1.5px 1.5px at 88% 30%, rgba(255, 255, 255, 1), transparent),
         radial-gradient(2px 2px at 95% 80%, rgba(56, 189, 248, 0.95), transparent);
-      animation: shimmer2 2.6s infinite alternate ease-in-out 0.6s;
+      animation: shimmer2 3.2s infinite alternate ease-in-out 0.8s;
     }
 
+    /* Translate3d pushes rendering to the GPU for ultra-smooth scaling */
     @keyframes shimmer {
-      0% { opacity: 0.2; transform: scale(0.97); }
-      50% { opacity: 1; transform: scale(1.02); }
-      100% { opacity: 0.35; transform: scale(1); }
+      0% { opacity: 0.2; transform: scale(0.97) translate3d(0,0,0); }
+      50% { opacity: 1; transform: scale(1.02) translate3d(0,0,0); }
+      100% { opacity: 0.35; transform: scale(1) translate3d(0,0,0); }
     }
 
     @keyframes shimmer2 {
-      0% { opacity: 0.15; transform: scale(1.01); }
-      50% { opacity: 0.95; transform: scale(0.98); }
-      100% { opacity: 0.25; transform: scale(1.01); }
+      0% { opacity: 0.15; transform: scale(1.01) translate3d(0,0,0); }
+      50% { opacity: 0.95; transform: scale(0.98) translate3d(0,0,0); }
+      100% { opacity: 0.25; transform: scale(1.01) translate3d(0,0,0); }
     }
 
     header {
@@ -120,6 +142,7 @@
       width: 100%;
       height: 55px;
       z-index: 10;
+      position: relative;
     }
 
     .brand-info {
@@ -134,12 +157,11 @@
       font-size: 21px;
       font-family: monospace;
       text-shadow: none;
-      transition: all 0.3s ease;
+      transition: color 0.4s ease;
     }
 
     body.day-mode .brand-icon {
       color: #0f172a;
-      text-shadow: none;
     }
 
     .brand-text h2 {
@@ -147,7 +169,7 @@
       font-weight: 800;
       color: #ffffff;
       letter-spacing: 0.2px;
-      transition: color 0.3s ease, text-shadow 0.3s ease;
+      transition: color 0.4s ease, text-shadow 0.4s ease;
     }
 
     body.day-mode .brand-text h2 {
@@ -160,7 +182,7 @@
       font-weight: 700;
       color: #64748b;
       margin-top: 1px;
-      transition: color 0.3s ease;
+      transition: color 0.4s ease;
     }
 
     body.day-mode .brand-text p {
@@ -181,7 +203,7 @@
       padding: 3px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(8px);
-      transition: all 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     body.day-mode .day-night-toggle {
@@ -200,7 +222,7 @@
       padding: 5px 12px;
       border-radius: 9px;
       cursor: pointer;
-      transition: all 0.25s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .toggle-opt.active {
@@ -237,7 +259,7 @@
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
       cursor: pointer;
       backdrop-filter: blur(8px);
-      transition: border-color 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
+      transition: border-color 0.3s ease, background 0.4s ease, box-shadow 0.4s ease;
     }
 
     body.day-mode .menu-button {
@@ -250,7 +272,7 @@
       font-weight: 800;
       font-size: 15px;
       color: #ffffff;
-      transition: color 0.3s ease;
+      transition: color 0.4s ease;
     }
 
     body.day-mode .menu-button span {
@@ -267,6 +289,7 @@
       justify-content: center;
       font-size: 13px;
       box-shadow: none;
+      transition: background 0.4s ease, box-shadow 0.4s ease;
     }
 
     body.day-mode .cat-avatar {
@@ -288,9 +311,12 @@
       overflow: hidden;
       opacity: 0;
       visibility: hidden;
-      transform: translateY(-8px);
-      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      transform: translateY(-10px) translate3d(0,0,0);
+      transition: opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                  transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                  visibility 0.3s;
       z-index: 20;
+      pointer-events: none; /* Prevents accidental hover when hidden */
     }
 
     body.day-mode .dropdown-menu {
@@ -302,7 +328,8 @@
     .menu-wrapper:hover .dropdown-menu {
       opacity: 1;
       visibility: visible;
-      transform: translateY(0);
+      pointer-events: auto;
+      transform: translateY(0) translate3d(0,0,0);
     }
 
     .menu-wrapper:hover .menu-button {
@@ -392,11 +419,14 @@
       position: relative;
       cursor: pointer;
       transform-origin: center bottom;
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                  text-shadow 0.25s ease, 
-                  color 0.25s ease, 
-                  filter 0.25s ease,
-                  -webkit-text-stroke 0.3s ease;
+      
+      /* GPU Acceleration & Smoother Beziers */
+      will-change: transform, filter, color, text-shadow;
+      transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                  text-shadow 0.4s ease, 
+                  color 0.4s ease, 
+                  filter 0.4s ease,
+                  -webkit-text-stroke 0.4s ease;
     }
 
     body.day-mode .main-title span {
@@ -415,7 +445,7 @@
     }
 
     .main-title span:hover {
-      transform: translateY(-32px) scale(1.2) rotate(-2deg);
+      transform: translate3d(0, -32px, 0) scale(1.2) rotate(-2deg);
       color: #ffffff;
       filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 1)) brightness(1.2);
       text-shadow: 
@@ -462,39 +492,61 @@
       margin: 0 clamp(-38px, -4vw, -20px);
       z-index: 1;
 
-      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                  filter 0.35s ease, 
+      /* Optimize for animations */
+      will-change: transform, filter, z-index;
+      transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                  filter 0.4s ease, 
                   background 0.4s ease,
                   z-index 0.2s ease;
-      animation: floatIcon 4s infinite ease-in-out alternate;
+      
+      /* Use a smoother, slightly longer duration for an organic float */
+      animation: floatIcon 4.5s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95) alternate;
     }
 
     .graphic-item:nth-child(1) { z-index: 1; animation-delay: 0s; }
-    .graphic-item:nth-child(2) { z-index: 2; animation-delay: 0.8s; }
-    .graphic-item:nth-child(3) { z-index: 3; animation-delay: 1.6s; }
-    .graphic-item:nth-child(4) { z-index: 4; animation-delay: 2.4s; }
+    .graphic-item:nth-child(2) { z-index: 2; animation-delay: 0.9s; }
+    .graphic-item:nth-child(3) { z-index: 3; animation-delay: 1.8s; }
+    .graphic-item:nth-child(4) { z-index: 4; animation-delay: 2.7s; }
 
+    /* Utilizing translate3d ensures animations run smoothly on the GPU */
     @keyframes floatIcon {
-      0% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-9px) rotate(1.2deg); }
-      100% { transform: translateY(4px) rotate(-1.2deg); }
-    }
-
-    .graphic-item::before {
-      display: none;
+      0% { transform: translate3d(0px, 0px, 0) rotate(0deg); }
+      50% { transform: translate3d(-2px, -12px, 0) rotate(1.5deg); }
+      100% { transform: translate3d(2px, 6px, 0) rotate(-1.5deg); }
     }
 
     .graphic-item:hover {
-      transform: translateY(-14px) scale(1.15);
       z-index: 15 !important;
-      filter: drop-shadow(0 20px 35px rgba(0, 0, 0, 0.95));
+      filter: drop-shadow(0 25px 40px rgba(0, 0, 0, 0.95));
       cursor: pointer;
+      /* Replace static transform with dynamic pop and continuous dance animations */
+      animation: 
+        hoverPopOut 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+        hoverContinuousDance 1.6s ease-in-out 0.5s infinite alternate !important;
+    }
+
+    /* Initial energetic pop out */
+    @keyframes hoverPopOut {
+      0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+      40% { transform: translate3d(0, -35px, 0) scale(1.3) rotate(-10deg); }
+      70% { transform: translate3d(0, -15px, 0) scale(1.15) rotate(10deg); }
+      100% { transform: translate3d(0, -22px, 0) scale(1.2) rotate(0deg); }
+    }
+
+    /* Continuous rhythm while hovered */
+    @keyframes hoverContinuousDance {
+      0% { transform: translate3d(0, -22px, 0) scale(1.2) rotate(0deg); }
+      33% { transform: translate3d(0, -28px, 0) scale(1.24) rotate(-6deg); }
+      66% { transform: translate3d(0, -16px, 0) scale(1.16) rotate(6deg); }
+      100% { transform: translate3d(0, -22px, 0) scale(1.2) rotate(0deg); }
     }
 
     .graphic-item svg {
       width: 100%;
       height: 100%;
       object-fit: contain;
+      /* Prevent internal SVG elements from causing repaints during parent scale */
+      transform: translateZ(0); 
     }
 
     body.day-mode .graphic-item {
@@ -506,39 +558,42 @@
       filter: drop-shadow(0 18px 30px rgba(15, 23, 42, 0.3));
     }
 
+    /* Smoother SVG transitions */
+    .graphic-item svg [stroke], .graphic-item svg [fill] {
+      transition: stroke 0.4s ease, fill 0.4s ease;
+    }
+
     body.day-mode .graphic-item svg [stroke="#00ffa3"] { stroke: #0f172a; }
     body.day-mode .graphic-item svg [fill="#00ffa3"] { fill: #0f172a; }
     body.day-mode .graphic-item svg [stroke="#38bdf8"] { stroke: #0284c7; }
     body.day-mode .graphic-item svg [fill="#0284c7"] { fill: #0284c7; }
 
-    /* DANCE ANIMATION FOR "PROCEED FURTHER" HOVER */
+    /* DANCE ANIMATION FOR "PROCEED FURTHER" HOVER - Smoothed keyframes */
     @keyframes danceIcon {
-      0% { transform: translateY(0px) rotate(0deg) scale(1); }
-      20% { transform: translateY(-24px) rotate(-16deg) scale(1.12); }
-      40% { transform: translateY(12px) rotate(12deg) scale(0.92); }
-      60% { transform: translateY(-16px) rotate(-8deg) scale(1.08); }
-      80% { transform: translateY(8px) rotate(6deg) scale(0.96); }
-      100% { transform: translateY(0px) rotate(0deg) scale(1); }
+      0% { transform: translate3d(0px, 0px, 0) rotate(0deg) scale(1); }
+      33% { transform: translate3d(0px, -20px, 0) rotate(-12deg) scale(1.08); }
+      66% { transform: translate3d(0px, 10px, 0) rotate(10deg) scale(0.94); }
+      100% { transform: translate3d(0px, 0px, 0) rotate(0deg) scale(1); }
     }
 
     body:has(.btn-proceed:hover) .graphic-item {
-      animation: danceIcon 0.6s ease-in-out infinite alternate !important;
+      animation: danceIcon 0.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate !important;
     }
 
     body:has(.btn-proceed:hover) .graphic-item:nth-child(1) { animation-delay: 0s !important; }
-    body:has(.btn-proceed:hover) .graphic-item:nth-child(2) { animation-delay: 0.12s !important; }
-    body:has(.btn-proceed:hover) .graphic-item:nth-child(3) { animation-delay: 0.24s !important; }
-    body:has(.btn-proceed:hover) .graphic-item:nth-child(4) { animation-delay: 0.36s !important; }
+    body:has(.btn-proceed:hover) .graphic-item:nth-child(2) { animation-delay: 0.15s !important; }
+    body:has(.btn-proceed:hover) .graphic-item:nth-child(3) { animation-delay: 0.3s !important; }
+    body:has(.btn-proceed:hover) .graphic-item:nth-child(4) { animation-delay: 0.45s !important; }
 
     /* SLOW SWAY TOGETHER ANIMATION FOR MENU BUTTON HOVER */
     @keyframes swayTogether {
-      0% { transform: translateY(-8px) rotate(-8deg); }
-      50% { transform: translateY(8px) rotate(8deg); }
-      100% { transform: translateY(-8px) rotate(-8deg); }
+      0% { transform: translate3d(0, -8px, 0) rotate(-6deg); }
+      50% { transform: translate3d(0, 8px, 0) rotate(6deg); }
+      100% { transform: translate3d(0, -8px, 0) rotate(-6deg); }
     }
 
     body:has(.menu-wrapper:hover) .graphic-item {
-      animation: swayTogether 2.8s ease-in-out infinite !important;
+      animation: swayTogether 3s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite !important;
     }
 
     /* PUSHED DOWN TAGLINE LINE */
@@ -551,7 +606,7 @@
       z-index: 5;
       max-width: 900px;
       text-shadow: 0 2px 12px rgba(0,0,0,0.9);
-      transition: color 0.3s ease, text-shadow 0.3s ease;
+      transition: color 0.4s ease, text-shadow 0.4s ease;
     }
 
     body.day-mode .tagline {
@@ -571,7 +626,13 @@
       cursor: pointer;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
       z-index: 5;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease, color 0.3s ease;
+      /* Added will-change for the transform to ensure button scaling is smooth */
+      will-change: transform, box-shadow;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                  box-shadow 0.3s ease, 
+                  background 0.4s ease, 
+                  color 0.4s ease,
+                  border-color 0.4s ease;
       margin-bottom: 12px;
     }
 
@@ -583,8 +644,8 @@
     }
 
     .btn-proceed:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+      transform: translate3d(0, -4px, 0) scale(1.03);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
     }
 
     body.day-mode .btn-proceed:hover {
@@ -592,10 +653,39 @@
       color: #ffffff;
       box-shadow: 0 12px 30px rgba(2, 132, 199, 0.45);
     }
+
+    /* Laser Tracker Overlay */
+    #laser-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    #laser-line {
+      stroke: #00ffa3;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 6px #00ffa3);
+    }
+    body.day-mode #laser-line {
+      stroke: #ef4444;
+      filter: drop-shadow(0 0 6px #ef4444);
+    }
   </style>
 </head>
 <body>
 
+  <!-- Fullscreen laser overlay -->
+  <svg id="laser-overlay">
+    <line id="laser-line" x1="0" y1="0" x2="0" y2="0" />
+  </svg>
+
+  <!-- We use an absolute overlay for day mode to guarantee smooth 60fps color transitions -->
+  <div class="day-bg-overlay"></div>
+  
   <div class="stars-layer"></div>
   <div class="stars-layer-2"></div>
 
@@ -867,7 +957,7 @@
           <circle cx="120" cy="70" r="4" fill="#00ffa3"/>
 
           <rect x="100" y="126" width="40" height="32" rx="7" fill="#050c12" stroke="#00ffa3" stroke-width="2.5"/>
-          <circle cx="120" cy="142" r="10" fill="url(#cameraLens)" stroke="#38bdf8" stroke-width="2"/>
+          <circle id="drone-camera-lens" cx="120" cy="142" r="10" fill="url(#cameraLens)" stroke="#38bdf8" stroke-width="2"/>
           <circle cx="120" cy="142" r="4" fill="#00ffa3"/>
         </svg>
       </div>
@@ -896,6 +986,30 @@
         dayBtn.classList.remove('active');
       }
     }
+
+    // Zero-latency instant mouse laser tracking logic
+    const laserLine = document.getElementById('laser-line');
+    const cameraLens = document.getElementById('drone-camera-lens');
+
+    function updateLaser(e) {
+      if (!cameraLens) return;
+      const rect = cameraLens.getBoundingClientRect();
+      // Center coordinates of the drone camera lens on the screen
+      const startX = rect.left + rect.width / 2;
+      const startY = rect.top + rect.height / 2;
+
+      laserLine.setAttribute('x1', startX);
+      laserLine.setAttribute('y1', startY);
+      laserLine.setAttribute('x2', e.clientX);
+      laserLine.setAttribute('y2', e.clientY);
+    }
+
+    window.addEventListener('mousemove', updateLaser, { passive: true });
+    
+    // Initial point to avoid flash
+    window.addEventListener('load', (e) => {
+      updateLaser({ clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 });
+    });
   </script>
 </body>
 </html>
