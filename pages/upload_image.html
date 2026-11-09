@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VERITAS - Upload Inputs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      overflow: hidden;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* NIGHT THEME (THEME 2: DARK CHERRY BLOSSOM PALETTE) */
+    body {
+      background-color: #0d040a;
+      background-image: radial-gradient(circle at 50% 40%, #2b0e20 0%, #160611 45%, #070105 100%);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      transition: color 0.6s ease, background-color 0.6s ease;
+    }
+
+    body.day-mode {
+      color: #4a1525;
+    }
+
+    /* DAY THEME OVERLAY (THEME 1: LIGHT SAKURA / SUNSET PALETTE) */
+    .day-bg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #f4d3dc;
+      background-image: linear-gradient(
+        180deg,
+        #f4d3dc 0%,
+        #eeb3c2 30%,
+        #f2cbd5 55%,
+        #f7dfcf 80%,
+        #fbeada 100%
+      );
+      opacity: 0;
+      z-index: 0;
+      pointer-events: none;
+      transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: opacity;
+    }
+
+    body.day-mode .day-bg-overlay {
+      opacity: 1;
+    }
+
+    .stars-layer, .stars-layer-2 {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      transition: opacity 0.6s ease;
+      will-change: opacity, transform;
+    }
+
+    body.day-mode .stars-layer,
+    body.day-mode .stars-layer-2 {
+      opacity: 0;
+    }
+
+    /* Subtle Night Stars */
+    .stars-layer {
+      background-image:
+        radial-gradient(1.5px 1.5px at 10% 15%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2px 2px at 20% 35%, rgba(216, 112, 147, 0.6), transparent),
+        radial-gradient(1px 1px at 30% 70%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(1.5px 1.5px at 35% 12%, rgba(243, 198, 214, 0.8), transparent),
+        radial-gradient(2.5px 2.5px at 45% 65%, rgba(190, 80, 120, 0.7), transparent),
+        radial-gradient(1px 1px at 50% 20%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(2.5px 2.5px at 60% 25%, rgba(216, 112, 147, 0.6), transparent),
+        radial-gradient(1px 1px at 68% 85%, rgba(255, 255, 255, 0.7), transparent),
+        radial-gradient(1.5px 1.5px at 70% 80%, rgba(243, 198, 214, 0.8), transparent),
+        radial-gradient(2px 2px at 80% 40%, rgba(190, 80, 120, 0.6), transparent),
+        radial-gradient(2px 2px at 85% 18%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(1.5px 1.5px at 92% 55%, rgba(255, 255, 255, 0.8), transparent);
+      animation: shimmer 2.4s infinite alternate ease-in-out;
+    }
+
+    .stars-layer-2 {
+      background-image:
+        radial-gradient(2px 2px at 5% 45%, rgba(190, 80, 120, 0.7), transparent),
+        radial-gradient(1.5px 1.5px at 15% 75%, rgba(255, 255, 255, 0.85), transparent),
+        radial-gradient(2.5px 2.5px at 25% 20%, rgba(216, 112, 147, 0.6), transparent),
+        radial-gradient(1px 1px at 38% 85%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(2.5px 2.5px at 48% 35%, rgba(243, 198, 214, 0.8), transparent),
+        radial-gradient(1.5px 1.5px at 55% 75%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2px 2px at 65% 50%, rgba(190, 80, 120, 0.6), transparent),
+        radial-gradient(1.5px 1.5px at 75% 15%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(2.5px 2.5px at 82% 70%, rgba(216, 112, 147, 0.7), transparent),
+        radial-gradient(1.5px 1.5px at 88% 30%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(2px 2px at 95% 80%, rgba(243, 198, 214, 0.7), transparent);
+      animation: shimmer2 3.2s infinite alternate ease-in-out 0.8s;
+    }
+
+    @keyframes shimmer {
+      0% { opacity: 0.2; transform: scale(0.97) translate3d(0,0,0); }
+      50% { opacity: 1; transform: scale(1.02) translate3d(0,0,0); }
+      100% { opacity: 0.35; transform: scale(1) translate3d(0,0,0); }
+    }
+
+    @keyframes shimmer2 {
+      0% { opacity: 0.15; transform: scale(1.01) translate3d(0,0,0); }
+      50% { opacity: 0.95; transform: scale(0.98) translate3d(0,0,0); }
+      100% { opacity: 0.25; transform: scale(1.01) translate3d(0,0,0); }
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 36px 0 36px;
+      width: 100%;
+      height: 55px;
+      z-index: 10;
+      position: relative;
+    }
+
+    .brand-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 38px;
+      padding: 3px 12px;
+      min-width: 0;
+      background: rgba(30, 11, 22, 0.85);
+      border: 1px solid #521c38;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .brand-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 30px;
+      flex-shrink: 0;
+      background: rgba(30, 11, 22, 0.85);
+      border: 1px solid #521c38;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      color: #f3c6d6;
+      font-weight: 900;
+      font-size: 15px;
+      font-family: monospace;
+      transition: color 0.4s ease, background 0.4s ease, border-color 0.4s ease;
+    }
+
+    body.day-mode .brand-icon {
+      background: rgba(255, 235, 240, 0.75);
+      border-color: rgba(200, 110, 140, 0.35);
+      box-shadow: 0 8px 20px rgba(120, 30, 60, 0.1);
+      color: #9d174d;
+    }
+
+    body.day-mode .brand-info {
+      background: rgba(255, 235, 240, 0.75);
+      border-color: rgba(200, 110, 140, 0.35);
+      box-shadow: 0 8px 20px rgba(120, 30, 60, 0.1);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      line-height: 1;
+    }
+
+    .brand-text h2 {
+      font-size: 16px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.2px;
+      line-height: 1.1;
+      margin: 0;
+      white-space: nowrap;
+      transition: color 0.4s ease, text-shadow 0.4s ease;
+    }
+
+    body.day-mode .brand-text h2 {
+      color: #4a1525;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ba8e9e;
+      line-height: 1.15;
+      margin: 2px 0 0;
+      white-space: nowrap;
+      transition: color 0.4s ease;
+    }
+
+    body.day-mode .brand-text p { color: #8a4f63; }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 38px;
+    }
+
+    .day-night-toggle {
+      display: flex;
+      background: rgba(30, 11, 22, 0.85);
+      border: 1px solid #521c38;
+      border-radius: 12px;
+      padding: 3px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body.day-mode .day-night-toggle {
+      background: rgba(255, 235, 240, 0.75);
+      border-color: rgba(200, 110, 140, 0.35);
+      box-shadow: 0 8px 20px rgba(120, 30, 60, 0.1);
+    }
+
+    .toggle-opt {
+      background: transparent;
+      border: none;
+      color: #ba8e9e;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 5px 12px;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .toggle-opt.active {
+      background: #3d1428;
+      color: #f3c6d6;
+      border: 1px solid #6b2446;
+    }
+
+    body.day-mode .toggle-opt { color: #8a4f63; }
+
+    body.day-mode .toggle-opt.active {
+      background: #4a1525;
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 4px 14px rgba(74, 21, 37, 0.25);
+    }
+
+    .menu-wrapper {
+      position: relative;
+      width: 160px;
+    }
+
+    .menu-button {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      background: rgba(30, 11, 22, 0.85);
+      border: 1px solid #521c38;
+      border-radius: 12px;
+      padding: 6px 14px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: border-color 0.3s ease, background 0.4s ease;
+    }
+
+    body.day-mode .menu-button {
+      background: rgba(255, 235, 240, 0.75);
+      border-color: rgba(200, 110, 140, 0.35);
+      box-shadow: 0 8px 20px rgba(120, 30, 60, 0.1);
+    }
+
+    .menu-button span {
+      font-weight: 800;
+      font-size: 15px;
+      color: #ffffff;
+    }
+
+    body.day-mode .menu-button span { color: #4a1525; }
+
+    .cat-avatar {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, #6b2446, #3d1428);
+      border: 1px solid #9c3b68;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+
+    body.day-mode .cat-avatar {
+      background: linear-gradient(135deg, #d81b60, #f48fb1);
+      border: none;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      margin-top: 6px;
+      background: rgba(22, 8, 17, 0.95);
+      border: 1px solid #521c38;
+      border-radius: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+      z-index: 20;
+    }
+
+    body.day-mode .dropdown-menu {
+      background: rgba(255, 240, 245, 0.95);
+      border-color: rgba(200, 110, 140, 0.4);
+      box-shadow: 0 12px 32px rgba(120, 30, 60, 0.15);
+    }
+
+    .menu-wrapper:hover .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .nav-list { list-style: none; padding: 6px 0; }
+    .nav-list li a {
+      display: block;
+      padding: 8px 12px;
+      color: #ba8e9e;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    body.day-mode .nav-list li a { color: #8a4f63; }
+    .nav-list li a:hover { color: #ffffff; background: rgba(107, 36, 70, 0.3); }
+    body.day-mode .nav-list li a:hover { color: #4a1525; background: rgba(216, 27, 96, 0.1); }
+
+    /* MAIN CONTAINER */
+    .hero-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      width: 100%;
+      max-width: none;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* EARTH STAGE */
+    .earth-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      min-height: 0;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .earth-frame {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .earth-sphere {
+      position: absolute;
+      bottom: -108%;
+      left: 50%;
+      width: 130vw;
+      height: clamp(1100px, 170vh, 2000px);
+      transform: translateX(-50%);
+      border-radius: 50%;
+      animation: floatEarth 5s infinite ease-in-out alternate;
+      z-index: 1;
+    }
+
+    .earth-sphere::before {
+      content: '';
+      position: absolute;
+      inset: -6%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 45%, rgba(0, 255, 163, 0.1) 0%, rgba(56, 189, 248, 0.05) 45%, transparent 68%);
+      filter: blur(12px);
+      z-index: 0;
+    }
+
+    .earth-sphere svg {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: drop-shadow(0 0 20px rgba(0, 255, 163, 0.12));
+    }
+
+    @keyframes floatEarth {
+      0% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+      100% { transform: translateX(-50%) translateY(-14px) rotate(1.2deg); }
+    }
+
+    /* UPLOAD IMAGES BUTTON - SUBTLE & DARK IN NIGHT MODE */
+    .btn-earth-upload {
+      position: absolute;
+      top: 70%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(38, 14, 26, 0.92);
+      color: #f3c6d6;
+      font-family: inherit;
+      font-size: clamp(16px, 2vw, 22px);
+      font-weight: 800;
+      padding: clamp(14px, 1.8vh, 20px) clamp(28px, 3vw, 46px);
+      border: 1.5px solid #6b2446;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+      white-space: nowrap;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .btn-earth-upload:hover {
+      transform: translate(-50%, -50%) scale(1.05);
+      box-shadow: 0 12px 35px rgba(107, 36, 70, 0.45);
+      background: #4a182f;
+      color: #ffffff;
+      border-color: #9c3b68;
+    }
+
+    body.day-mode .btn-earth-upload {
+      background: #4a1525;
+      color: #ffffff;
+      border-color: #f48fb1;
+      box-shadow: 0 8px 30px rgba(74, 21, 37, 0.3);
+    }
+
+    body.day-mode .btn-earth-upload:hover {
+      background: #d81b60;
+      color: #ffffff;
+    }
+
+    /* DUAL INPUT BOXES STAGE (STEP 2) */
+    .upload-stage {
+      display: none;
+      opacity: 0;
+      transform: scale(0.95);
+      gap: 32px;
+      width: 100%;
+      max-width: 1050px;
+      justify-content: center;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      margin-top: 10px;
+    }
+
+    .upload-stage.active {
+      display: flex;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .upload-box {
+      flex: 1;
+      background: rgba(28, 11, 21, 0.85);
+      border: 2px dashed #521c38;
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 380px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    body.day-mode .upload-box {
+      background: rgba(255, 235, 240, 0.75);
+      border-color: rgba(200, 110, 140, 0.4);
+      box-shadow: 0 12px 30px rgba(120, 30, 60, 0.1);
+    }
+
+    .upload-box:hover {
+      border-color: #9c3b68;
+      transform: translateY(-4px);
+    }
+
+    body.day-mode .upload-box:hover {
+      border-color: #d81b60;
+    }
+
+    .upload-box p {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ba8e9e;
+      margin-bottom: 16px;
+    }
+
+    body.day-mode .upload-box p { color: #8a4f63; }
+
+    .file-input { display: none; }
+
+    .btn-input-file {
+      background: rgba(38, 14, 26, 0.7);
+      border: 1.5px solid #6b2446;
+      color: #f3c6d6;
+      font-weight: 800;
+      font-size: 16px;
+      padding: 12px 28px;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-input-file:hover {
+      background: #4a182f;
+      color: #ffffff;
+      border-color: #9c3b68;
+      box-shadow: 0 0 15px rgba(107, 36, 70, 0.4);
+    }
+
+    body.day-mode .btn-input-file {
+      background: transparent;
+      border-color: #4a1525;
+      color: #4a1525;
+    }
+
+    body.day-mode .btn-input-file:hover {
+      background: #4a1525;
+      color: #ffffff;
+      box-shadow: none;
+    }
+
+    .preview-thumb {
+      width: 100%;
+      height: auto;
+      max-height: 240px;
+      object-fit: contain;
+      border-radius: 12px;
+      display: none;
+      margin-bottom: 12px;
+      border: 1px solid #6b2446;
+    }
+
+    body.day-mode .preview-thumb {
+      border-color: #d81b60;
+    }
+
+    /* INITIALLY HIDDEN PROCEED BUTTON - SUBTLE & DARK IN NIGHT MODE */
+    .btn-proceed {
+      display: none;
+      background: rgba(38, 14, 26, 0.92);
+      color: #f3c6d6;
+      font-size: clamp(17px, 2.2vh, 22px);
+      font-weight: 800;
+      padding: clamp(14px, 2vh, 18px) clamp(40px, 4vw, 56px);
+      border: 1.5px solid #6b2446;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      z-index: 5;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, background 0.3s ease;
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+
+    .btn-proceed.active {
+      display: inline-block;
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn-proceed:hover {
+      transform: translate3d(0, -4px, 0) scale(1.03);
+      background: #4a182f;
+      color: #ffffff;
+      border-color: #9c3b68;
+      box-shadow: 0 10px 30px rgba(107, 36, 70, 0.5);
+    }
+
+    body.day-mode .btn-proceed {
+      background: #4a1525;
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 10px 25px rgba(74, 21, 37, 0.3);
+    }
+
+    body.day-mode .btn-proceed:hover {
+      background: #d81b60;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="day-bg-overlay"></div>
+  <div class="stars-layer"></div>
+  <div class="stars-layer-2"></div>
+
+  <header>
+    <div class="brand-info">
+      <div class="brand-icon">&lt;/&gt;</div>
+      <div class="brand-text">
+        <h2>Team KompilerZ</h2>
+        <p>Code2Create 2026 Gravitas</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="day-night-toggle">
+        <button id="dayBtn" class="toggle-opt" onclick="setTheme('day')">Day</button>
+        <button id="nightBtn" class="toggle-opt active" onclick="setTheme('night')">Night</button>
+      </div>
+
+      <div class="menu-wrapper">
+        <div class="menu-button">
+          <span>Menu</span>
+          <div class="cat-avatar">🐱</div>
+        </div>
+        <div class="dropdown-menu">
+          <ul class="nav-list">
+            <li><a href="landing_page.html">Home</a></li>
+            <li><a href="#about">About Team</a></li>
+            <li><a href="#repository">Repository</a></li>
+            <li><a href="#documentation">Documentation</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="hero-container">
+
+    <!-- Step 1: Earth Segment Stage -->
+    <div class="earth-stage" id="earthStage">
+      <div class="earth-frame">
+        <div class="earth-sphere">
+          <svg viewBox="0 0 400 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="oceanGrad" cx="38%" cy="38%" r="70%">
+                <stop offset="0%" stop-color="#0f6b6f"/>
+                <stop offset="55%" stop-color="#0a3d52"/>
+                <stop offset="100%" stop-color="#041824"/>
+              </radialGradient>
+              <clipPath id="sphereClip">
+                <circle cx="200" cy="200" r="196"/>
+              </clipPath>
+            </defs>
+            <circle cx="200" cy="200" r="196" fill="url(#oceanGrad)"/>
+            <g clip-path="url(#sphereClip)" fill="#00ffa3" opacity="0.82">
+              <path d="M60 120 Q100 90 150 110 Q190 125 175 165 Q210 175 200 210 Q170 225 140 205 Q95 220 80 180 Q55 165 60 120 Z"/>
+              <path d="M230 70 Q280 55 320 90 Q345 120 310 150 Q330 190 290 205 Q250 195 245 155 Q215 125 230 70 Z"/>
+              <path d="M110 250 Q160 235 195 265 Q210 300 175 320 Q135 335 105 305 Q80 280 110 250 Z"/>
+              <path d="M260 250 Q310 245 330 280 Q325 320 285 325 Q250 310 250 280 Z"/>
+              <ellipse cx="205" cy="60" rx="45" ry="16"/>
+              <ellipse cx="80" cy="330" rx="38" ry="14"/>
+            </g>
+            <circle cx="200" cy="200" r="196" fill="none" stroke="#000000" stroke-opacity="0.25" stroke-width="1"/>
+            <ellipse cx="150" cy="150" rx="120" ry="90" fill="#ffffff" opacity="0.06"/>
+          </svg>
+        </div>
+        <button class="btn-earth-upload" onclick="revealUploadBoxes()">Upload Images</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Dual Image Input Boxes -->
+    <div class="upload-stage" id="uploadStage">
+      <!-- Box 1 -->
+      <div class="upload-box">
+        <img id="preview1" class="preview-thumb" alt="Preview Image 1">
+        <p id="label1">Select First Image Input</p>
+        <input type="file" id="fileInput1" class="file-input" accept="image/*" onchange="handleFileSelect(this, 'preview1', 'label1')">
+        <button class="btn-input-file" onclick="document.getElementById('fileInput1').click()">Image 1</button>
+      </div>
+
+      <!-- Box 2 -->
+      <div class="upload-box">
+        <img id="preview2" class="preview-thumb" alt="Preview Image 2">
+        <p id="label2">Select Second Image Input</p>
+        <input type="file" id="fileInput2" class="file-input" accept="image/*" onchange="handleFileSelect(this, 'preview2', 'label2')">
+        <button class="btn-input-file" onclick="document.getElementById('fileInput2').click()">Image 2</button>
+      </div>
+    </div>
+
+    <!-- Proceed Button & Quick Sample Option -->
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 10;">
+      <button id="proceedBtn" class="btn-proceed" onclick="proceedAnalysis()">Proceed with Analysis</button>
+      <button id="sampleBtn" class="btn-input-file" style="background: rgba(255,255,255,0.06); border: 1px dashed rgba(255,255,255,0.2); font-size: 11px; padding: 6px 16px; border-radius: 9999px; cursor: pointer; color: #a0aec0; transition: all 0.2s;" onclick="loadSampleImages()">
+        Quick Load Sample Pair (Before &amp; After)
+      </button>
+    </div>
+
+    <!-- Feedback Toast -->
+    <div id="uploadToast" style="position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(18, 5, 13, 0.95); border: 1px solid #f43f5e; color: #fff; padding: 12px 24px; border-radius: 9999px; font-size: 13px; font-weight: 600; letter-spacing: 0.05em; box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(244,63,94,0.4); opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 9999; display: flex; align-items: center; gap: 8px;">
+      <span style="color: #f43f5e; font-size: 16px;">⚠️</span>
+      <span id="toastMsg">Please select both images.</span>
+    </div>
+
+  </main>
+
+  <script src="veritas_store.js"></script>
+  <script>
+    let file1Data = null;
+    let file2Data = null;
+    let file1Name = 'Image 1';
+    let file2Name = 'Image 2';
+
+    function setTheme(mode) {
+      const dayBtn = document.getElementById('dayBtn');
+      const nightBtn = document.getElementById('nightBtn');
+
+      if (mode === 'day') {
+        document.body.classList.add('day-mode');
+        dayBtn.classList.add('active');
+        nightBtn.classList.remove('active');
+      } else {
+        document.body.classList.remove('day-mode');
+        nightBtn.classList.add('active');
+        dayBtn.classList.remove('active');
+      }
+      try {
+        localStorage.setItem('veritas_theme', mode);
+        sessionStorage.setItem('veritas_theme', mode);
+      } catch (e) {}
+    }
+
+    function showToast(msg, isError = true) {
+      const toast = document.getElementById('uploadToast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.innerText = msg;
+      toast.style.borderColor = isError ? '#f43f5e' : '#00ffa3';
+      toast.style.boxShadow = isError ? '0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(244,63,94,0.4)' : '0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(0,255,163,0.4)';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      toast.style.opacity = '1';
+
+      setTimeout(() => {
+        toast.style.transform = 'translateX(-50%) translateY(100px)';
+        toast.style.opacity = '0';
+      }, 3200);
+    }
+
+    function revealUploadBoxes() {
+      const earthStage = document.getElementById('earthStage');
+      const uploadStage = document.getElementById('uploadStage');
+      const proceedBtn = document.getElementById('proceedBtn');
+
+      earthStage.style.display = 'none';
+      uploadStage.classList.add('active');
+      proceedBtn.classList.add('active');
+    }
+
+    function handleFileSelect(input, previewId, labelId) {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById(previewId);
+          img.src = e.target.result;
+          img.style.display = 'block';
+          document.getElementById(labelId).innerText = file.name;
+
+          if (previewId === 'preview1') {
+            file1Data = e.target.result;
+            file1Name = file.name;
+          } else {
+            file2Data = e.target.result;
+            file2Name = file.name;
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function loadSampleImages() {
+      try {
+        revealUploadBoxes();
+        showToast('Loading VERITAS benchmark sample pair...', false);
+
+        const resp1 = await fetch('../samples/sample_before.png');
+        const blob1 = await resp1.blob();
+        const reader1 = new FileReader();
+        reader1.onloadend = () => {
+          file1Data = reader1.result;
+          file1Name = 'sample_before.png';
+          const img1 = document.getElementById('preview1');
+          img1.src = file1Data;
+          img1.style.display = 'block';
+          document.getElementById('label1').innerText = 'sample_before.png (Loaded)';
+        };
+        reader1.readAsDataURL(blob1);
+
+        const resp2 = await fetch('../samples/sample_after.jpg');
+        const blob2 = await resp2.blob();
+        const reader2 = new FileReader();
+        reader2.onloadend = () => {
+          file2Data = reader2.result;
+          file2Name = 'sample_after.jpg';
+          const img2 = document.getElementById('preview2');
+          img2.src = file2Data;
+          img2.style.display = 'block';
+          document.getElementById('label2').innerText = 'sample_after.jpg (Loaded)';
+        };
+        reader2.readAsDataURL(blob2);
+
+        setTimeout(() => {
+          showToast('Sample pair loaded into memory! Click "Proceed with Analysis".', false);
+        }, 600);
+      } catch (err) {
+        console.warn('Sample load error:', err);
+        showToast('Could not auto-fetch sample images; please select files manually.', true);
+      }
+    }
+
+    async function proceedAnalysis() {
+      // Must upload two images beforehand
+      if (!file1Data || !file2Data) {
+        showToast('Please upload both Image 1 and Image 2 before proceeding.', true);
+        return;
+      }
+
+      const proceedBtn = document.getElementById('proceedBtn');
+      proceedBtn.innerText = 'Caching & Initializing Pipeline...';
+      proceedBtn.style.opacity = '0.7';
+      proceedBtn.style.pointerEvents = 'none';
+
+      try {
+        if (window.VeritasCache) {
+          await window.VeritasCache.savePair(file1Data, file2Data, file1Name, file2Name);
+        } else {
+          sessionStorage.setItem('veritas_active_pair', JSON.stringify({
+            ref_image: file1Data,
+            src_image: file2Data,
+            ref_name: file1Name,
+            src_name: file2Name,
+            timestamp: Date.now()
+          }));
+        }
+
+        showToast('Images securely cached. Opening Analysis Dashboard...', false);
+        setTimeout(() => {
+          window.location.href = 'analysis_page.html';
+        }, 700);
+      } catch (err) {
+        console.error('Failed to save to cache:', err);
+        showToast('Memory save warning. Proceeding with analysis...', false);
+        setTimeout(() => {
+          window.location.href = 'analysis_page.html';
+        }, 800);
+      }
+    }
+
+    // Auto-restore previously cached pair and theme if returning
+    window.addEventListener('DOMContentLoaded', async () => {
+      let savedTheme = 'night';
+      try {
+        savedTheme = localStorage.getItem('veritas_theme') || sessionStorage.getItem('veritas_theme') || 'night';
+      } catch (e) {}
+      setTheme(savedTheme);
+
+      if (window.VeritasCache) {
+        const cached = await window.VeritasCache.getPair();
+        if (cached && cached.ref_image && cached.src_image) {
+          file1Data = cached.ref_image;
+          file2Data = cached.src_image;
+          file1Name = cached.ref_name || 'Cached Image 1';
+          file2Name = cached.src_name || 'Cached Image 2';
+
+          revealUploadBoxes();
+          const img1 = document.getElementById('preview1');
+          img1.src = file1Data;
+          img1.style.display = 'block';
+          document.getElementById('label1').innerText = file1Name;
+
+          const img2 = document.getElementById('preview2');
+          img2.src = file2Data;
+          img2.style.display = 'block';
+          document.getElementById('label2').innerText = file2Name;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
